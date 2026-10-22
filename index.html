@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BiyaheCavite – Commute &amp; Fare Planner</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--card:#f4f4f4;--ink:#111;--mut:#6b6b6b;--line:#111;--soft:#e8e8e8;--w:#fff;--onink:#fff;--warn:#7a4d00;--warnbg:#fff1d6;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--card:#171717;--ink:#f2f2f2;--mut:#9b9b9b;--line:#f2f2f2;--soft:#2a2a2a;--w:#222;--onink:#111;--warn:#f0b755;--warnbg:#3a2c10;color-scheme:dark}}
+:root[data-theme="dark"]{--card:#171717;--ink:#f2f2f2;--mut:#9b9b9b;--line:#f2f2f2;--soft:#2a2a2a;--w:#222;--onink:#111;--warn:#f0b755;--warnbg:#3a2c10;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;color:var(--ink);font:16px/1.5 Montserrat,system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh;background:repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 1px,transparent 1px 36px),linear-gradient(180deg,#0d0d0d,#25252d 55%,#5b6195);background-attachment:fixed}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:#0d0d0d;z-index:10}
+.shell{width:calc(100% - 24px);max-width:980px;margin:clamp(12px,3vw,28px) auto;background:var(--card);border:3px solid rgba(255,255,255,.92);border-radius:30px;padding:24px clamp(18px,4vw,44px) 30px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+nav{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:21px}
+.locb{display:flex;align-items:center;gap:8px;padding:10px 14px;border:2px solid var(--line);border-radius:14px;background:transparent;color:var(--ink);font:600 14px Montserrat,system-ui,sans-serif;cursor:pointer}
+.hero{margin:34px 0 26px}
+h1{margin:0 0 14px;font-size:clamp(42px,10vw,88px);line-height:1.05;letter-spacing:-.025em;font-weight:300}
+h1 b{display:block;font-weight:800}h1 span{display:block}
+.hero p{margin:0 0 22px;color:var(--mut);max-width:480px}
+.chip{display:inline-block;background:var(--w);padding:12px 24px;border-radius:99px;font-weight:500;font-size:17px}
+.planner{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:end}
+label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--mut);margin-bottom:6px}
+select{width:100%;padding:14px 12px;font:500 15px Montserrat,system-ui,sans-serif;border-radius:14px;border:2px solid var(--line);background:transparent;color:var(--ink)}
+select:focus,button:focus-visible,a:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.swap{width:46px;height:46px;border-radius:50%;border:2px solid var(--line);background:transparent;color:var(--ink);font-size:18px;cursor:pointer}
+.mapbox{margin-top:20px;border-radius:22px;overflow:hidden;background:var(--w)}
+.mapbar{padding:12px 16px;font-size:13px;color:var(--mut)}
+#map{height:min(62vh,460px);isolation:isolate}.leaflet-container{font-family:inherit}.mk{width:18px;height:18px;border-radius:50%;background:#111;border:3px solid #fff;box-shadow:0 0 0 2px #111}.mk.dest{background:#e5484d;box-shadow:0 0 0 2px #e5484d}.mk.me2{background:#2f7bff;box-shadow:0 0 0 2px #2f7bff,0 0 0 8px rgba(47,123,255,.25)}
+.lbl{fill:var(--mut);font-size:9px;font-weight:500;pointer-events:none}.dot{fill:var(--ink)}.dotm{fill:#8a8a8a}.pin{fill:var(--ink)}
+.me{fill:var(--ink);stroke:var(--w);stroke-width:3}.halo{fill:var(--ink);animation:pu 1.8s infinite;transform-box:fill-box;transform-origin:center}
+@keyframes pu{0%{transform:scale(.6);opacity:.35}100%{transform:scale(2.4);opacity:0}}
+.ln{stroke:var(--ink);stroke-dasharray:5 4;fill:none;stroke-width:2}.grid{stroke:var(--soft);stroke-width:.8}
+.opts{display:flex;flex-wrap:wrap;gap:18px;margin-top:16px}
+.opts label{display:flex;gap:8px;align-items:center;text-transform:none;letter-spacing:0;font-size:14px;font-weight:500;color:var(--ink);margin:0;cursor:pointer}
+.opts input{accent-color:#111;width:17px;height:17px}
+.go{margin-top:18px;width:100%;padding:16px;border:0;border-radius:99px;font:700 16px Montserrat,system-ui,sans-serif;color:var(--onink);background:var(--ink);cursor:pointer}
+.go:hover{opacity:.88}
+#err{color:var(--warn);background:var(--warnbg);padding:10px 14px;border-radius:12px;margin-top:14px;display:none;font-size:14px}
+#res{margin-top:24px}
+.sum{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sum h2{margin:0;font-size:22px;font-weight:800}
+.pill{background:var(--w);padding:6px 14px;border-radius:99px;font-size:13px;font-weight:600}
+.mode{background:var(--w);border-radius:22px;padding:16px;margin-bottom:12px}
+.row{display:flex;gap:14px;align-items:center}
+.ico{width:46px;height:46px;border-radius:14px;background:var(--soft);display:grid;place-items:center;font-size:23px;flex:none;filter:grayscale(1)}
+.mid{flex:1;min-width:0}.mid b{font-size:16px;font-weight:700}.mid small{display:block;color:var(--mut)}
+.price{text-align:right;font-size:22px;font-weight:800;white-space:nowrap}.price small{display:block;font-size:11px;font-weight:500;color:var(--mut)}
+.tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 9px;border-radius:99px;background:var(--ink);color:var(--onink);margin-left:6px;vertical-align:2px}
+details{margin-top:10px;border-top:1px solid var(--soft);padding-top:8px}
+summary{cursor:pointer;font-weight:600;font-size:14px}
+ol{margin:10px 0 0;padding-left:22px;font-size:15px}li{margin-bottom:6px}.tip{margin-top:8px;font-size:13px;color:var(--mut)}
+.gm{display:block;text-align:center;margin-top:4px;padding:14px;border:2px solid var(--line);border-radius:99px;color:var(--ink);text-decoration:none;font-weight:700}
+.note{margin-top:24px;font-size:12.5px;color:var(--mut);background:var(--w);border-radius:18px;padding:14px 16px}
+footer{text-align:center;color:var(--mut);font-size:12px;margin-top:18px}
+@media(max-width:640px){.planner{grid-template-columns:1fr}.swap{justify-self:center;transform:rotate(90deg)}.price{font-size:19px}.chip{font-size:15px}}</style>
+</head>
+<body>
+<div class="shell">
+<nav><div class="brand"><svg width="30" height="26" viewBox="0 0 30 26" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M2 4l6 18 7-12 7 12 6-18"/></svg>BiyaheCavite</div>
+<button class="locb" id="locb"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Use my location</button></nav>
+<section class="hero"><h1><b>Commute</b><span>anywhere in</span><span>Cavite</span></h1>
+<p>Pick where you’re headed and see every way to get there, with travel time and fare.</p><span class="chip">✱ 23 cities &amp; towns</span></section>
+<section>
+<div class="planner">
+<div><label for="from">From</label><select id="from"></select></div>
+<button class="swap" id="swap" title="Swap locations" aria-label="Swap locations">⇅</button>
+<div><label for="to">To</label><select id="to"></select></div>
+</div>
+<div class="mapbox"><div class="mapbar"><span id="mst">Finding your location…</span></div><div id="map"></div></div>
+<div class="opts">
+<label><input type="checkbox" id="disc"> Student / Senior / PWD (20% discount)</label>
+<label><input type="checkbox" id="peak"> Rush hour</label>
+</div>
+<button class="go" id="go">Find my commute</button>
+<div id="err"></div>
+<div id="res"></div>
+</section>
+<div class="note">Fares are estimates. Jeepney fares follow the LTFRB rates effective September 28, 2026 (traditional ₱14 for the first 4 km, then ₱2/km; modern ₱17, then ₱2.40/km). Bus, UV Express, tricycle and ride-hailing prices vary by operator, route and demand. Road distance comes from OpenStreetMap routing and map data © OpenStreetMap contributors. Always confirm the final fare with the driver or conductor.</div>
+<footer>BiyaheCavite · Built for Caviteños</footer>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+var P=[["Alfonso",14.137,120.855],["Amadeo",14.170,120.925],["Bacoor",14.459,120.944],["Carmona",14.314,121.058],["Cavite City",14.479,120.897],["Dasmariñas",14.329,120.937],["General Emilio Aguinaldo",14.178,120.797],["General Mariano Alvarez",14.300,121.000],["General Trias",14.387,120.881],["Imus",14.430,120.937],["Indang",14.195,120.877],["Kawit",14.447,120.902],["Magallanes",14.156,120.751],["Maragondon",14.274,120.737],["Mendez",14.128,120.904],["Naic",14.319,120.766],["Noveleta",14.429,120.879],["Rosario",14.414,120.857],["Silang",14.230,120.975],["Tagaytay",14.115,120.962],["Tanza",14.339,120.853],["Ternate",14.290,120.716],["Trece Martires",14.282,120.867]];
+var M=[["Alabang (Muntinlupa)",14.418,121.043],["Baclaran / Pasay",14.537,121.001],["Makati",14.555,121.024],["Manila (Lawton)",14.593,120.981],["Zapote (Las Piñas)",14.450,120.977]];
+var ALL=P.concat(M),HUBS=["Bacoor","Imus","Dasmariñas","Trece Martires","Zapote (Las Piñas)"];
+var $=function(i){return document.getElementById(i)};
+function fill(s){var h='<option value="">Select a location</option><option value="ME" disabled>📍 My location</option><option value="PIN" disabled>📌 Dropped pin</option><optgroup label="Cavite">';P.forEach(function(p){h+='<option>'+p[0]+'</option>'});h+='</optgroup><optgroup label="Metro Manila hubs">';M.forEach(function(p){h+='<option>'+p[0]+'</option>'});s.innerHTML=h+'</optgroup>'}
+fill($("from"));fill($("to"));
+var ME=null,PIN=null,pinNear="";
+function pt(n){if(n=="ME")return ME;if(n=="PIN")return PIN;return ALL.filter(function(p){return p[0]==n})[0]}
+function nm(v){return v=="ME"?"My location":v=="PIN"?"Pin near "+pinNear:v}
+function km(a,b){var c=window.CACHE&&CACHE[a[1].toFixed(4)+","+a[2].toFixed(4)+"|"+b[1].toFixed(4)+","+b[2].toFixed(4)];if(c)return c.km;var r=Math.PI/180,x=(b[2]-a[2])*r*Math.cos((a[1]+b[1])*r/2),y=(b[1]-a[1])*r;return Math.max(.8,Math.sqrt(x*x+y*y)*6371*1.35)}
+var R=Math.round,C=Math.ceil,X=Math.max;
+var MODES=[
+{k:"tri",n:"Tricycle",i:"🛺",sp:20,w:3,ok:function(d){return d<=9},f:function(d){var b=20+X(0,d-2)*10;return[R(b*.8),R(b*1.3)]},t:"Short local rides. Special trips cost more, so agree on the fare before you ride.",nt:1,nd:1},
+{k:"jeep",n:"Traditional jeepney",i:"🚐",sp:17,w:6,ok:function(d){return d>=1},f:function(d){var x=C(14+X(0,d-4)*2);return[x,x]},t:"Pay the conductor or pass your fare forward. Say “para po” at your stop.",tr:1},
+{k:"mjeep",n:"Modern jeepney",i:"🚌",sp:19,w:8,ok:function(d){return d>=3},f:function(d){var x=C(17+X(0,d-4)*2.4);return[x,x]},t:"Air-conditioned and available on selected routes only.",tr:1},
+{k:"uv",n:"UV Express",i:"🚐",sp:28,w:12,ok:function(d){return d>=6},f:function(d){var b=X(40,d*3.2);return[R(b*.9),R(b*1.15)]},t:"Leaves from terminals once full. Faster, with fewer stops.",tr:1,nd:1},
+{k:"bus",n:"Bus (ordinary / aircon)",i:"🚍",sp:24,w:12,ok:function(d){return d>=9},f:function(d){return[C(12+X(0,d-5)*2.2),C(15+X(0,d-5)*2.45)]},t:"Wait along the highway or at a terminal. Pay the conductor onboard.",tr:1},
+{k:"tnvs",n:"Ride-hailing (Grab, inDrive…)",i:"🚗",sp:30,w:6,ok:function(d){return d>=2},f:function(d){var b=85+14*d;return[R(b*.9),R(b*1.25)]},t:"Most comfortable door-to-door option. Price rises with demand.",nt:1,nd:1}];
+var BD={tri:"Hail a tricycle",jeep:"Board a jeepney",mjeep:"Board a modern jeepney",uv:"Queue at the UV Express terminal",bus:"Flag down or queue for a bus",tnvs:"Book a ride-hailing car"};
+function plan(a,b){var d=km(a,b),hub=null;
+if(d>14){var best=1e9;HUBS.forEach(function(h){var p=pt(h),s=km(a,p)+km(p,b);if(h!=a[0]&&h!=b[0]&&km(a,p)>3&&km(p,b)>3&&s<=d*1.2&&s<best){best=s;hub=p}})}
+return{d:d,hub:hub}}
+function calc(o,t,disc,peak){var a=pt(o),b=pt(t);o=a[0];t=b[0];var pl=plan(a,b),d=pl.d,out=[],sf=peak?.7:1;
+MODES.forEach(function(m){if(!m.ok(d))return;var lo,hi,time,legs=pl.hub&&m.tr;
+if(legs){var d1=km(a,pl.hub),d2=km(pl.hub,b),f1=m.f(d1),f2=m.f(d2);lo=f1[0]+f2[0];hi=f1[1]+f2[1];d=d1+d2;time=(d1+d2)/(m.sp*sf)*60+m.w*2+5}
+else{var f=m.f(pl.d);lo=f[0];hi=f[1];time=pl.d/(m.sp*sf)*60+m.w}
+if(peak&&m.k=="tnvs"){lo=R(lo*1.15);hi=R(hi*1.15)}
+if(disc&&m.tr){lo=R(lo*.8);hi=R(hi*.8)}
+var s=[BD[m.k]+" in "+o+" bound for "+(legs?pl.hub[0]:t)+"."];
+if(legs)s.push("Get off at "+pl.hub[0]+" and transfer to another "+m.n.toLowerCase().split(" (")[0]+" bound for "+t+".");
+if(m.k=="tri"||m.k=="tnvs")s[0]=BD[m.k]+" from "+o+" straight to "+t+".";
+s.push("Alight in "+t+" (tell the driver your stop).");
+out.push({m:m,lo:lo,hi:hi,time:time,steps:s,hub:legs?pl.hub[0]:null})});
+return{d:pl.d,list:out}}
+function mid(r){return(r.lo+r.hi)/2}
+function render(){var o=$("from").value,t=$("to").value,e=$("err");e.style.display="none";
+if(!o||!t){e.textContent="Please choose both your starting point and your destination.";e.style.display="block";return}
+if(o==t){e.textContent="Your starting point and destination are the same. For very short trips, a tricycle or walking works.";e.style.display="block";$("res").innerHTML="";return}
+var r=calc(o,t,$("disc").checked,$("peak").checked),L=r.list.sort(function(a,b){return mid(a)-mid(b)});
+var cheap=L[0],fast=L.slice().sort(function(a,b){return a.time-b.time})[0],rec=L.slice().sort(function(a,b){return(mid(a)+a.time*.6)-(mid(b)+b.time*.6)})[0];
+var h='<div class="sum"><h2>'+nm(o)+' → '+nm(t)+'</h2><span class="pill">≈ '+R(r.d)+' km'+(isRoad(o,t)?' · by road':' · estimated')+'</span></div>';
+L.forEach(function(x){var tg="";if(x==rec)tg+='<span class="tag">Best value</span>';if(x==cheap)tg+='<span class="tag">Cheapest</span>';if(x==fast)tg+='<span class="tag">Fastest</span>';
+var p=x.lo==x.hi?"₱"+x.lo:"₱"+x.lo+"–"+x.hi,t1=R(x.time/5)*5||5,t2=t1+R(x.time*.25/5)*5+5;
+h+='<article class="card mode"><div class="row"><div class="ico">'+x.m.i+'</div><div class="mid"><b>'+x.m.n+'</b>'+tg+'<small>'+(x.hub?"Transfer at "+x.hub:"Direct ride")+' · '+t1+'–'+t2+' min</small></div><div class="price">'+p+'<small>'+(x.m.nd?"estimated":"per person")+'</small></div></div><details><summary>How to ride</summary><ol>'+x.steps.map(function(s){return"<li>"+s+"</li>"}).join("")+'</ol><div class="tip">💡 '+x.m.t+'</div></details></article>'});
+var A=pt(o),B=pt(t);h=h.replace("</div><article",'</div><a class="gm" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&origin='+A[1]+","+A[2]+"&destination="+B[1]+","+B[2]+'&travelmode=driving">Open this trip in Google Maps ↗</a><article');$("res").innerHTML=h}
+$("go").onclick=render;$("disc").onchange=$("peak").onchange=function(){if($("from").value&&$("to").value&&$("res").innerHTML)render()};
+$("swap").onclick=function(){var a=$("from").value;$("from").value=$("to").value;$("to").value=a;if(a||$("from").value)after()};
+var map=L.map("map").setView([14.30,120.93],10);
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap contributors"}).addTo(map);
+var CACHE={},LY=L.layerGroup().addTo(map);
+function st(s){$("mst").textContent=s}
+function near(la,lo){var b=null,bd=1e9;ALL.forEach(function(p){var d=Math.hypot(p[1]-la,(p[2]-lo)*.97);if(d<bd){bd=d;b=p}});return b}
+function opt(v,txt){["from","to"].forEach(function(id){var o=$(id).querySelector('option[value="'+v+'"]');o.disabled=false;o.textContent=txt})}
+function mk(c){return L.divIcon({className:"",html:'<div class="mk '+c+'"></div>',iconSize:[18,18],iconAnchor:[9,9]})}
+function key(a,b){return a[1].toFixed(4)+","+a[2].toFixed(4)+"|"+b[1].toFixed(4)+","+b[2].toFixed(4)}
+function isRoad(o,t){var a=pt(o),b=pt(t);return !!(a&&b&&CACHE[key(a,b)])}
+ALL.forEach(function(p){L.circleMarker([p[1],p[2]],{radius:5,color:"#111",weight:2,fillColor:M.indexOf(p)>-1?"#999":"#fff",fillOpacity:1,bubblingMouseEvents:false}).addTo(map).bindTooltip(p[0]).on("click",function(){$("to").value=p[0];st("Drop-off: "+p[0]);after()})});
+function draw(rt){LY.clearLayers();var f=$("from").value,t=$("to").value,a=f&&pt(f),b=t&&pt(t),q=[];
+if(a){L.marker([a[1],a[2]],{icon:mk(f=="ME"?"me2":"")}).addTo(LY);q.push([a[1],a[2]]);if(f=="ME"&&ME[3])L.circle([a[1],a[2]],{radius:ME[3],weight:1,color:"#2f7bff",fillOpacity:.08}).addTo(LY)}
+if(b){L.marker([b[1],b[2]],{icon:mk("dest")}).addTo(LY);q.push([b[1],b[2]])}
+if(rt)L.polyline(rt,{color:"#111",weight:5,opacity:.85}).addTo(LY);else if(q.length==2)L.polyline(q,{color:"#111",weight:2,dashArray:"6 6"}).addTo(LY);
+if(rt)map.fitBounds(rt,{padding:[40,40]});else if(q.length==2)map.fitBounds(q,{padding:[40,40]});else if(q.length==1)map.setView(q[0],13)}
+function route(a,b){var k=key(a,b);if(CACHE[k])return Promise.resolve(CACHE[k]);
+return fetch("https://router.project-osrm.org/route/v1/driving/"+a[2]+","+a[1]+";"+b[2]+","+b[1]+"?overview=full&geometries=geojson").then(function(r){return r.json()}).then(function(j){var r=j.routes[0];CACHE[k]={km:r.distance/1000,geo:r.geometry.coordinates.map(function(c){return[c[1],c[0]]})};return CACHE[k]})}
+function after(){var f=$("from").value,t=$("to").value;draw();if(!f){st("Allow location access, or choose your starting point from the list.");return}if(!t||f==t)return;
+var a=pt(f),b=pt(t);st("Getting the road route…");route(a,b).then(function(c){draw(c.geo);st("Road distance: "+c.km.toFixed(1)+" km (OpenStreetMap routing).");render()}).catch(function(){st("Couldn’t reach the routing service, so distance is estimated.");render()})}
+map.on("click",function(e){var n=near(e.latlng.lat,e.latlng.lng);pinNear=n[0];PIN=["Pin near "+n[0],e.latlng.lat,e.latlng.lng];opt("PIN","📌 Pin near "+n[0]);$("to").value="PIN";st("Drop-off pinned near "+n[0]+".");after()});
+$("from").onchange=$("to").onchange=after;
+function locate(){st("Finding your location…");if(!navigator.geolocation){st("Location isn’t available here. Pick your starting point from the list.");return}navigator.geolocation.getCurrentPosition(function(r){ME=["My location",r.coords.latitude,r.coords.longitude,r.coords.accuracy];opt("ME","📍 My location");$("from").value="ME";st("Location found (±"+R(r.coords.accuracy)+" m). Click the map to set your drop-off.");after()},function(){st("Couldn’t get your location. Allow location access in your browser, or pick your starting point from the list.")},{enableHighAccuracy:true,timeout:15000,maximumAge:30000})}
+$("locb").onclick=locate;draw();locate();
+</script>
+</body>
+</html>
