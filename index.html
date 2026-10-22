@@ -140,27 +140,75 @@ function mk(c){return L.divIcon({className:"",html:'<div class="mk '+c+'"></div>
 function key(a,b){return a[1].toFixed(4)+","+a[2].toFixed(4)+"|"+b[1].toFixed(4)+","+b[2].toFixed(4)}
 function isRoad(o,t){var a=pt(o),b=pt(t);return !!(a&&b&&CACHE[key(a,b)])}
 ALL.forEach(function(p){L.circleMarker([p[1],p[2]],{radius:5,color:"#111",weight:2,fillColor:M.indexOf(p)>-1?"#999":"#fff",fillOpacity:1,bubblingMouseEvents:false}).addTo(map).bindTooltip(p[0]).on("click",function(){$("to").value=p[0];st("Drop-off: "+p[0]);after()})});
-function draw(rt){LY.clearLayers();var f=$("from").value,t=$("to").value,a=f&&pt(f),b=t&&pt(t),q=[];
-if(a){var om=L.marker([a[1],a[2]],{icon:mk(f=="ME"?"me2":""),draggable:f=="ME"}).addTo(LY);if(f=="ME")om.on("dragend",function(e){var p=e.target.getLatLng();ME=["My location",p.lat,p.lng,0];st("Start moved. Drag the blue dot any time to fine-tune it.");after()});q.push([a[1],a[2]]);if(f=="ME"&&ME[3])L.circle([a[1],a[2]],{radius:ME[3],weight:1,color:"#2f7bff",fillOpacity:.08}).addTo(LY)}
-if(b){L.marker([b[1],b[2]],{icon:mk("dest")}).addTo(LY);q.push([b[1],b[2]])}
-if(rt)L.polyline(rt,{color:"#111",weight:5,opacity:.85}).addTo(LY);else if(q.length==2)L.polyline(q,{color:"#111",weight:2,dashArray:"6 6"}).addTo(LY);
-if(rt)map.fitBounds(rt,{padding:[40,40]});else if(q.length==2)map.fitBounds(q,{padding:[40,40]});else if(q.length==1)map.setView(q[0],13)}
+
+function draw(rt){
+    LY.clearLayers();var f=$("from").value,t=$("to").value,a=f&&pt(f),b=t&&pt(t),q=[];
+    if(a){
+        var om=L.marker([a[1],a[2]],{icon:mk(f=="ME"?"me2":""),draggable:f=="ME"}).addTo(LY);
+        if(f=="ME")om.on("dragend",function(e){
+            var p=e.target.getLatLng();
+            ME=["My location",p.lat,p.lng,0];
+            st("Start moved. Drag the blue dot any time to fine-tune it.");
+            if(WID!==null){navigator.geolocation.clearWatch(WID);WID=null;}
+            if(TID!==null){clearTimeout(TID);TID=null;}
+            after();
+        });
+        q.push([a[1],a[2]]);
+        if(f=="ME"&&ME[3])L.circle([a[1],a[2]],{radius:ME[3],weight:1,color:"#2f7bff",fillOpacity:.08}).addTo(LY);
+    }
+    if(b){L.marker([b[1],b[2]],{icon:mk("dest")}).addTo(LY);q.push([b[1],b[2]])}
+    if(rt)L.polyline(rt,{color:"#111",weight:5,opacity:.85}).addTo(LY);else if(q.length==2)L.polyline(q,{color:"#111",weight:2,dashArray:"6 6"}).addTo(LY);
+    if(rt)map.fitBounds(rt,{padding:[40,40]});else if(q.length==2)map.fitBounds(q,{padding:[40,40]});else if(q.length==1)map.setView(q[0],13)
+}
+
 function route(a,b){var k=key(a,b);if(CACHE[k])return Promise.resolve(CACHE[k]);
 return fetch("https://router.project-osrm.org/route/v1/driving/"+a[2]+","+a[1]+";"+b[2]+","+b[1]+"?overview=full&geometries=geojson").then(function(r){return r.json()}).then(function(j){var r=j.routes[0];CACHE[k]={km:r.distance/1000,geo:r.geometry.coordinates.map(function(c){return[c[1],c[0]]})};return CACHE[k]})}
 function after(){var f=$("from").value,t=$("to").value;draw();if(!f){st("Allow location access, or choose your starting point from the list.");return}if(!t||f==t)return;
 var a=pt(f),b=pt(t);st("Getting the road route…");route(a,b).then(function(c){draw(c.geo);st("Road distance: "+c.km.toFixed(1)+" km (OpenStreetMap routing).");render()}).catch(function(){st("Couldn’t reach the routing service, so distance is estimated.");render()})}
 map.on("click",function(e){var n=near(e.latlng.lat,e.latlng.lng);pinNear=n[0];PIN=["Pin near "+n[0],e.latlng.lat,e.latlng.lng];opt("PIN","📌 Pin near "+n[0]);$("to").value="PIN";st("Drop-off pinned near "+n[0]+".");after()});
 $("from").onchange=$("to").onchange=after;
-var WID=null;
-function fin(){if(WID!==null){navigator.geolocation.clearWatch(WID);WID=null;after()}}
-function locate(){st("Finding your location…");if(!navigator.geolocation){st("Location isn’t available here. Pick your starting point from the list.");return}
-if(WID!==null)navigator.geolocation.clearWatch(WID);var best=null;
-WID=navigator.geolocation.watchPosition(function(r){var c=r.coords;if(!best||c.accuracy<best.accuracy)best=c;
-ME=["My location",best.latitude,best.longitude,best.accuracy];opt("ME","📍 My location");$("from").value="ME";var m=R(best.accuracy);
-st(m<=50?"Location locked (±"+m+" m). Click the map to set your drop-off.":"Improving your location (±"+m+" m)… If the blue dot is off, drag it to your exact spot.");
-draw();if(m<=30)fin()},function(){st("Couldn’t get your location. Allow location access in your browser, or pick your starting point from the list.")},{enableHighAccuracy:true,timeout:20000,maximumAge:0});
-setTimeout(fin,25000)}
-$("locb").onclick=locate;draw();locate();
+
+var WID=null, TID=null;
+function fin(){
+    if(TID!==null){clearTimeout(TID);TID=null;}
+    if(WID!==null){navigator.geolocation.clearWatch(WID);WID=null;after();}
+}
+
+function locate(){
+    st("Finding your location…");
+    if(!navigator.geolocation){st("Location isn’t available here. Pick your starting point from the list.");return}
+    if(WID!==null)navigator.geolocation.clearWatch(WID);
+    if(TID!==null)clearTimeout(TID);
+    
+    var best=null;
+    WID=navigator.geolocation.watchPosition(function(r){
+        var c=r.coords;
+        if(!best||c.accuracy<best.accuracy)best=c;
+        ME=["My location",best.latitude,best.longitude,best.accuracy];
+        opt("ME","📍 My location");
+        
+        var f=$("from").value;
+        if(!f || f==="ME"){
+            $("from").value="ME";
+            if(!$("to").value) draw();
+        }
+        
+        var m=R(best.accuracy);
+        st(m<=50?"Location locked (±"+m+" m). Click the map to set your drop-off.":"Improving your location (±"+m+" m)… If the blue dot is off, drag it to your exact spot.");
+        
+        if(m<=30)fin();
+    },function(){
+        st("Couldn’t get your location. Allow location access in your browser, or pick your starting point from the list.");
+        if(WID!==null){navigator.geolocation.clearWatch(WID);WID=null;}
+        if(TID!==null){clearTimeout(TID);TID=null;}
+    },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
+    
+    TID=setTimeout(fin,25000);
+}
+
+$("locb").onclick=locate;
+draw();
+locate();
 </script>
 </body>
 </html>
