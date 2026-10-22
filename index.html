@@ -2,17 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
-<title>Tara, Cavite!</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600;700&display=swap">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tara, Cavite! – Commute Planner</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
 :root {
     --maroon: #731320; 
     --maroon-dark: #4a0b14;
-    --text-dark: #333333;
-    --text-light: #666666;
-    --text-meta: #888888;
+    --text-dark: #222222;
+    --text-light: #444444; /* Darkened for outdoor contrast */
+    --text-meta: #555555;  /* Darkened for outdoor contrast */
     --border: #cccccc;
     --bg-sidebar: #ffffff;
     --bg-body: #f4f4f4;
@@ -22,18 +21,18 @@
 body, html { 
     margin: 0; 
     padding: 0; 
-    height: 100vh; 
+    height: 100dvh; /* Swapped to dvh to fix mobile address bar cutoff */
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
     background-color: var(--bg-body);
     overflow: hidden;
 }
 
 /* Layout */
-.app-container { display: flex; height: 100vh; width: 100vw; }
+.app-container { display: flex; height: 100%; width: 100vw; }
 
 /* Sidebar */
 .sidebar { width: 400px; min-width: 320px; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
-.sidebar-header { padding: 24px 24px 16px; }
+.sidebar-header { padding: 24px 24px 16px; flex-shrink: 0; }
 
 /* Branding */
 .brand-header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
@@ -44,7 +43,7 @@ body, html {
 .search-controls { display: flex; flex-direction: column; gap: 12px; }
 
 .input-wrapper { position: relative; width: 100%; border: 1px solid var(--border); border-radius: 4px; background: #fff; }
-.input-wrapper input { width: 100%; border: none; padding: 12px 14px; outline: none; font-size: 15px; color: var(--text-dark); background: transparent; font-family: inherit; }
+.input-wrapper input { width: 100%; border: none; padding: 12px 14px; outline: none; font-size: 16px; color: var(--text-dark); background: transparent; font-family: inherit; }
 .input-wrapper input:focus { box-shadow: inset 0 0 0 2px var(--maroon); border-radius: 4px; }
 
 /* Autocomplete Dropdown */
@@ -53,25 +52,26 @@ body, html {
 .sugg-item { padding: 12px 14px; font-size: 13px; cursor: pointer; border-bottom: 1px solid #eee; color: var(--text-dark); line-height: 1.4; }
 .sugg-item:last-child { border-bottom: none; }
 .sugg-item:hover { background: #f9f9f9; color: var(--maroon); }
-.sugg-item strong { display: block; font-size: 14px; margin-bottom: 2px; }
+.sugg-item strong { display: block; font-size: 15px; margin-bottom: 2px; }
+.sugg-item small { color: var(--text-meta); }
 
-.btn-loc { background: transparent; border: none; cursor: pointer; color: #0066cc; font-weight: 600; font-size: 13px; padding: 4px 0; display: flex; align-items: center; gap: 4px; }
+.btn-loc { background: transparent; border: none; cursor: pointer; color: #0066cc; font-weight: 600; font-size: 14px; padding: 6px 0; display: flex; align-items: center; gap: 4px; }
 .btn-loc:hover { text-decoration: underline; }
 
-.options { display: flex; gap: 16px; font-size: 13px; color: var(--text-dark); margin: 4px 0; }
-.options label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
-.options input { cursor: pointer; margin: 0; accent-color: var(--maroon); }
+.options { display: flex; gap: 16px; font-size: 14px; color: var(--text-dark); margin: 4px 0; }
+.options label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 600; }
+.options input { cursor: pointer; margin: 0; accent-color: var(--maroon); width: 16px; height: 16px; }
 
-.btn-primary { background-color: var(--maroon); color: #ffffff; border: none; border-radius: 4px; padding: 14px; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%; text-align: center; transition: background 0.2s; margin-top: 4px; }
+.btn-primary { background-color: var(--maroon); color: #ffffff; border: none; border-radius: 4px; padding: 14px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; text-align: center; transition: background 0.2s; margin-top: 4px; }
 .btn-primary:hover { background-color: var(--maroon-dark); }
 
 /* Status Toast */
-#mst { display: block; font-size: 12px; color: #d93025; margin-top: 8px; min-height: 18px; font-weight: 600; }
-#err { color: #d93025; font-size: 13px; margin-top: 10px; display: none; font-weight: 600; padding: 10px; background: #fce8e6; border-radius: 4px; }
+#mst { display: block; font-size: 13px; color: #d93025; margin-top: 8px; min-height: 18px; font-weight: 600; }
+#err { color: #d93025; font-size: 14px; margin-top: 10px; display: none; font-weight: 600; padding: 10px; background: #fce8e6; border-radius: 4px; }
 
 /* Results Area */
 .results-area { flex: 1; overflow-y: auto; border-top: 1px solid var(--border); background: #fff; }
-.result-header { padding: 16px 24px; font-size: 13px; font-weight: 600; color: var(--text-dark); border-bottom: 1px solid #eee; background: #fafafa; position: sticky; top: 0; z-index: 5; }
+.result-header { padding: 16px 24px; font-size: 13px; font-weight: 600; color: var(--text-dark); border-bottom: 1px solid #eee; background: #fafafa; position: sticky; top: 0; z-index: 5; line-height: 1.4; }
 
 .list-item { display: flex; padding: 20px 24px; border-bottom: 1px solid #eee; align-items: flex-start; }
 .list-item:hover { background: #fdfdfd; }
@@ -81,13 +81,13 @@ body, html {
 .marker-num { position: absolute; top: 6px; left: 0; width: 100%; text-align: center; color: white; font-size: 14px; font-weight: 700; line-height: 1; }
 
 .item-content { flex: 1; min-width: 0; }
-.item-title { font-size: 16px; color: var(--text-dark); margin: 0 0 6px 0; font-weight: 600; }
-.item-desc { font-size: 13px; color: var(--text-light); margin: 0 0 6px 0; line-height: 1.5; }
-.item-tip { font-size: 11.5px; color: var(--text-meta); font-style: italic; }
+.item-title { font-size: 16px; color: var(--text-dark); margin: 0 0 6px 0; font-weight: 700; }
+.item-desc { font-size: 14px; color: var(--text-light); margin: 0 0 6px 0; line-height: 1.5; font-weight: 500; }
+.item-tip { font-size: 12px; color: var(--text-meta); font-style: italic; font-weight: 500; }
 
 .item-meta { text-align: right; margin-left: 12px; }
-.meta-price { font-size: 16px; font-weight: 700; color: var(--maroon); margin-bottom: 4px; }
-.meta-time { font-size: 12px; color: var(--text-light); font-weight: 600; }
+.meta-price { font-size: 16px; font-weight: 700; color: var(--maroon); margin-bottom: 4px; white-space: nowrap; }
+.meta-time { font-size: 13px; color: var(--text-light); font-weight: 600; white-space: nowrap; }
 
 /* Map Area */
 .map-container { flex: 1; position: relative; z-index: 1; }
@@ -102,8 +102,8 @@ body, html {
 /* Mobile Layout */
 @media (max-width: 768px) {
     .app-container { flex-direction: column-reverse; }
-    .sidebar { width: 100%; height: 55vh; border-right: none; border-top: 1px solid var(--border); box-shadow: 0 -4px 16px rgba(0,0,0,0.1); }
-    .map-container { height: 45vh; flex: none; }
+    .sidebar { width: 100%; height: 55dvh; border-right: none; border-top: 1px solid var(--border); box-shadow: 0 -4px 16px rgba(0,0,0,0.1); }
+    .map-container { height: 45dvh; flex: none; }
 }
 </style>
 </head>
@@ -113,13 +113,14 @@ body, html {
     <aside class="sidebar">
         <div class="sidebar-header">
             <div class="brand-header">
-                <img src="Tara, Cavite!.png" alt="Tara, Cavite! Logo" class="app-logo">
+                <!-- Renamed to standard format. Update your repo file to 'logo.png' -->
+                <img src="logo.png" alt="Tara, Cavite! Logo" class="app-logo">
                 <h1 class="app-title">Tara, Cavite!</h1>
             </div>
             
             <div class="search-controls">
                 <div class="input-wrapper">
-                    <input type="text" id="from" placeholder="Enter specific pickup location..." autocomplete="off">
+                    <input type="text" id="from" placeholder="Enter pickup location..." autocomplete="off">
                     <div id="from-sugg" class="sugg-box"></div>
                 </div>
                 
@@ -129,7 +130,7 @@ body, html {
                 </div>
 
                 <div class="input-wrapper">
-                    <input type="text" id="to" placeholder="Where exactly do you want to go?" autocomplete="off">
+                    <input type="text" id="to" placeholder="Where do you want to go?" autocomplete="off">
                     <div id="to-sugg" class="sugg-box"></div>
                 </div>
                 
@@ -165,7 +166,6 @@ var ALL = [["Bacoor",14.459,120.944],["Imus",14.430,120.937],["Dasmariñas",14.3
 var ORIGIN = null;
 var DEST = null;
 
-// Haversine Distance Formula
 function km(a,b){var c=window.CACHE&&CACHE[key(a,b)];if(c)return c.km;var r=Math.PI/180,x=(b[2]-a[2])*r*Math.cos((a[1]+b[1])*r/2),y=(b[1]-a[1])*r;return Math.max(.8,Math.sqrt(x*x+y*y)*6371*1.35)}
 function key(a,b){return a[1].toFixed(4)+","+a[2].toFixed(4)+"|"+b[1].toFixed(4)+","+b[2].toFixed(4)}
 function pt(n){ return ALL.find(p => p[0]===n); }
@@ -174,8 +174,8 @@ var R=Math.round,C=Math.ceil,X=Math.max;
 
 var MODES=[
 {k:"tri",n:"Tricycle",sp:20,w:3,ok:function(d){return d<=9},f:function(d){var b=20+X(0,d-2)*10;return[R(b*.8),R(b*1.3)]},t:"Short local rides. Agree on fare beforehand.",nt:1,nd:1},
-{k:"jeep",n:"Traditional Jeepney",sp:17,w:6,ok:function(d){return d>=1},f:function(d){var x=C(14+X(0,d-4)*2);return[x,x]},t:"Say “para po” at your stop.",tr:1},
-{k:"mjeep",n:"Modern Jeep",sp:19,w:8,ok:function(d){return d>=3},f:function(d){var x=C(17+X(0,d-4)*2.4);return[x,x]},t:"Air-conditioned on selected routes.",tr:1},
+{k:"jeep",n:"Traditional Jeepney",sp:17,w:6,ok:function(d){return d>=1 && d<=35},f:function(d){var x=C(14+X(0,d-4)*2);return[x,x]},t:"Say “para po” at your stop.",tr:1},
+{k:"mjeep",n:"Modern Jeep",sp:19,w:8,ok:function(d){return d>=3 && d<=45},f:function(d){var x=C(17+X(0,d-4)*2.4);return[x,x]},t:"Air-conditioned on selected routes.",tr:1},
 {k:"uv",n:"UV Express",sp:28,w:12,ok:function(d){return d>=6},f:function(d){var b=X(40,d*3.2);return[R(b*.9),R(b*1.15)]},t:"Leaves from terminals once full.",tr:1,nd:1},
 {k:"bus",n:"Bus (Ordinary/Aircon)",sp:24,w:12,ok:function(d){return d>=9},f:function(d){return[C(12+X(0,d-5)*2.2),C(15+X(0,d-5)*2.45)]},t:"Wait along highway or terminal.",tr:1},
 {k:"tnvs",n:"Ride-Hailing (Grab)",sp:30,w:6,ok:function(d){return d>=2},f:function(d){var b=85+14*d;return[R(b*.9),R(b*1.25)]},t:"Comfortable door-to-door option.",nt:1,nd:1}];
@@ -198,17 +198,18 @@ out.push({m:m,lo:lo,hi:hi,time:time,steps:s.join(" "),hub:legs?pl.hub[0]:null})}
 return{d:pl.d,list:out}}
 
 function mid(r){return(r.lo+r.hi)/2}
-function render(){
+function render(isFallback){
     var e=$("err"),ra=$("results-area");e.style.display="none";
     if(!ORIGIN||!DEST){e.textContent="Please select specific locations from the dropdowns or map.";e.style.display="block";ra.style.display="none";return}
     
     var r=calc(ORIGIN,DEST,$("disc").checked,$("peak").checked),L=r.list.sort(function(a,b){return mid(a)-mid(b)});
     
-    $("res-count").innerHTML = 'Showing ' + L.length + ' routes (' + R(r.d) + ' km driving distance)';
+    var distLabel = isFallback ? "est. straight-line distance" : "driving distance";
+    $("res-count").innerHTML = 'Showing ' + L.length + ' routes (' + R(r.d) + ' km ' + distLabel + ') <br><span style="font-weight:400; color:#666; font-size:11px;">Fares are estimates based on LTFRB guidelines.</span>';
     
     var h='';
     L.forEach(function(x, index){
-        var p=x.lo==x.hi?"₱"+x.lo:"₱"+x.lo+"–"+x.hi,t1=R(x.time/5)*5||5,t2=t1+R(x.time*.25/5)*5+5;
+        var p=x.lo==x.hi?"Est. ₱"+x.lo:"Est. ₱"+x.lo+"–"+x.hi,t1=R(x.time/5)*5||5,t2=t1+R(x.time*.25/5)*5+5;
         h+='<div class="list-item"><div class="marker-icon"><svg viewBox="0 0 24 36"><path d="M12 0C5.373 0 0 5.373 0 12c0 8.44 12 24 12 24s12-15.56 12-24C24 5.373 18.627 0 12 0z"/></svg><div class="marker-num">'+(index+1)+'</div></div><div class="item-content"><h3 class="item-title">'+x.m.n+'</h3><p class="item-desc">'+x.steps+'</p><p class="item-tip">'+x.m.t+'</p></div><div class="item-meta"><div class="meta-price">'+p+'</div><div class="meta-time">'+t1+'–'+t2+' min</div></div></div>';
     });
     
@@ -216,8 +217,8 @@ function render(){
     ra.style.display="block";
 }
 
-$("go").onclick=render;
-$("disc").onchange=$("peak").onchange=function(){if(ORIGIN&&DEST&&$("res").innerHTML)render()};
+$("go").onclick = function(){ render(false); };
+$("disc").onchange=$("peak").onchange=function(){if(ORIGIN&&DEST&&$("res").innerHTML)render(false)};
 
 $("swap").onclick=function(){
     var t_pt = ORIGIN; ORIGIN = DEST; DEST = t_pt;
@@ -225,48 +226,49 @@ $("swap").onclick=function(){
     after();
 };
 
-/* Geocoding / Free Text Search API */
+/* Photon API (OSM) for Autocomplete */
 function bindSearch(id, isDest){
     var inp = $(id), box =$(id+"-sugg"), timeout;
     inp.addEventListener('input', function(){
-        if(!inp.value) { if(isDest) DEST=null; else ORIGIN=null; } // Clear selection if user deletes text
+        if(!inp.value) { if(isDest) DEST=null; else ORIGIN=null; } 
         clearTimeout(timeout);
         if(inp.value.length < 3) { box.innerHTML=""; return; }
         timeout = setTimeout(function(){
-            // Prioritize Philippines/Cavite context
-            fetch("https://nominatim.openstreetmap.org/search?format=json&countrycodes=ph&q="+encodeURIComponent(inp.value)+"&limit=5")
+            // Photon API biased towards Cavite coordinates
+            fetch("https://photon.komoot.io/api/?q="+encodeURIComponent(inp.value)+"&lat=14.33&lon=120.93&limit=5")
             .then(r=>r.json()).then(function(d){
                 box.innerHTML="";
-                d.forEach(function(x){
-                    var parts = x.display_name.split(",");
-                    var shortName = parts[0].trim();
-                    var d = document.createElement("div");
-                    d.className = "sugg-item";
-                    d.innerHTML = "<strong>"+shortName+"</strong>" + x.display_name.substring(shortName.length+1);
-                    d.onclick = function(){
-                        inp.value = shortName;
+                if(!d.features) return;
+                d.features.forEach(function(f){
+                    var p = f.properties;
+                    var name = p.name || p.street;
+                    if(!name) return;
+                    var context = [p.city || p.county, p.state].filter(Boolean).join(", ");
+                    var dEl = document.createElement("div");
+                    dEl.className = "sugg-item";
+                    dEl.innerHTML = "<strong>"+name+"</strong><small>" + context + "</small>";
+                    dEl.onclick = function(){
+                        inp.value = name;
                         box.innerHTML = "";
-                        var pt = [shortName, parseFloat(x.lat), parseFloat(x.lon)];
+                        var pt = [name, f.geometry.coordinates[1], f.geometry.coordinates[0]];
                         if(isDest) DEST = pt; else ORIGIN = pt;
                         after();
                     };
-                    box.appendChild(d);
+                    box.appendChild(dEl);
                 })
             })
-        }, 500); // 500ms debounce
+        }, 400); 
     });
-    
-    // Hide dropdown when clicking outside
     document.addEventListener('click', function(e) { if(!inp.contains(e.target) && !box.contains(e.target)) box.innerHTML = ""; });
 }
 
 bindSearch("from", false);
 bindSearch("to", true);
 
-/* Map Initialisation */
+/* Map Initialisation with proper attribution */
 var map=L.map("map", {zoomControl: false}).setView([14.30,120.93],10);
 L.control.zoom({position: 'bottomright'}).addTo(map);
-L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:""}).addTo(map);
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"}).addTo(map);
 var CACHE={},LY=L.layerGroup().addTo(map);
 
 function st(s){ 
@@ -315,18 +317,22 @@ function after(){
     route(ORIGIN,DEST).then(function(c){
         draw(c.geo);
         st(""); 
-        if($("results-area").style.display === "block") render(); 
+        if($("results-area").style.display === "block") render(false); 
     }).catch(function(){
         st("Network error, distance estimated.");
-        if($("results-area").style.display === "block") render();
+        if($("results-area").style.display === "block") render(true); // Pass true to show "straight-line" label
     })
 }
 
 // Map Click to drop a Pin
 map.on("click",function(e){
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${e.latlng.lat}&lon=${e.latlng.lng}`)
+    fetch(`https://photon.komoot.io/api/?q=&lat=${e.latlng.lat}&lon=${e.latlng.lng}&limit=1`)
     .then(r=>r.json()).then(data=>{
-        var shortName = data.address.road || data.address.suburb || data.address.city || "Dropped Pin";
+        var shortName = "Dropped Pin";
+        if(data.features && data.features.length > 0) {
+            var p = data.features[0].properties;
+            shortName = p.name || p.street || p.city || "Dropped Pin";
+        }
         DEST = [shortName, e.latlng.lat, e.latlng.lng];
         $("to").value = shortName;
         st("Pinned destination near " + shortName);
