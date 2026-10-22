@@ -4,14 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tara, Cavite! – Commute Planner</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<!-- Added Subresource Integrity (SRI) hashes for security -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous" />
 <style>
 :root {
     --maroon: #731320; 
     --maroon-dark: #4a0b14;
     --text-dark: #222222;
-    --text-light: #444444; /* Darkened for outdoor contrast */
-    --text-meta: #555555;  /* Darkened for outdoor contrast */
+    --text-light: #444444; 
+    --text-meta: #555555;  
     --border: #cccccc;
     --bg-sidebar: #ffffff;
     --bg-body: #f4f4f4;
@@ -21,8 +22,8 @@
 body, html { 
     margin: 0; 
     padding: 0; 
-    height: 100dvh; /* Swapped to dvh to fix mobile address bar cutoff */
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+    height: 100dvh; 
+    font-family: system-ui, -apple-system, sans-serif; 
     background-color: var(--bg-body);
     overflow: hidden;
 }
@@ -35,15 +36,18 @@ body, html {
 .sidebar-header { padding: 24px 24px 16px; flex-shrink: 0; }
 
 /* Branding */
-.brand-header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
-.app-logo { width: 56px; height: 56px; border-radius: 12px; object-fit: cover; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #eaeaea; }
-.app-title { margin: 0; font-size: 26px; font-weight: 700; color: var(--maroon); letter-spacing: -0.5px; }
+.brand-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+.app-logo { width: 50px; height: 50px; border-radius: 12px; object-fit: cover; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #eaeaea; }
+.app-title { margin: 0; font-size: 24px; font-weight: 700; color: var(--maroon); letter-spacing: -0.5px; }
 
 /* Search Controls */
 .search-controls { display: flex; flex-direction: column; gap: 12px; }
 
+/* Accessibility: visually hide labels but keep for screen readers */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
+
 .input-wrapper { position: relative; width: 100%; border: 1px solid var(--border); border-radius: 4px; background: #fff; }
-.input-wrapper input { width: 100%; border: none; padding: 12px 14px; outline: none; font-size: 16px; color: var(--text-dark); background: transparent; font-family: inherit; }
+.input-wrapper input { width: 100%; border: none; padding: 12px 14px; outline: none; font-size: 15px; color: var(--text-dark); background: transparent; font-family: inherit; }
 .input-wrapper input:focus { box-shadow: inset 0 0 0 2px var(--maroon); border-radius: 4px; }
 
 /* Autocomplete Dropdown */
@@ -51,43 +55,42 @@ body, html {
 .sugg-box:empty { display: none; }
 .sugg-item { padding: 12px 14px; font-size: 13px; cursor: pointer; border-bottom: 1px solid #eee; color: var(--text-dark); line-height: 1.4; }
 .sugg-item:last-child { border-bottom: none; }
-.sugg-item:hover { background: #f9f9f9; color: var(--maroon); }
-.sugg-item strong { display: block; font-size: 15px; margin-bottom: 2px; }
+.sugg-item:hover, .sugg-item:focus { background: #f9f9f9; color: var(--maroon); outline: none; }
+.sugg-item strong { display: block; font-size: 14px; margin-bottom: 2px; }
 .sugg-item small { color: var(--text-meta); }
 
-.btn-loc { background: transparent; border: none; cursor: pointer; color: #0066cc; font-weight: 600; font-size: 14px; padding: 6px 0; display: flex; align-items: center; gap: 4px; }
+.btn-loc { background: transparent; border: none; cursor: pointer; color: #0066cc; font-weight: 600; font-size: 13.5px; padding: 6px 0; display: flex; align-items: center; gap: 4px; }
 .btn-loc:hover { text-decoration: underline; }
 
-.options { display: flex; gap: 16px; font-size: 14px; color: var(--text-dark); margin: 4px 0; }
+.options { display: flex; gap: 16px; font-size: 13.5px; color: var(--text-dark); margin: 4px 0; }
 .options label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 600; }
 .options input { cursor: pointer; margin: 0; accent-color: var(--maroon); width: 16px; height: 16px; }
 
-.btn-primary { background-color: var(--maroon); color: #ffffff; border: none; border-radius: 4px; padding: 14px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; text-align: center; transition: background 0.2s; margin-top: 4px; }
+.btn-primary { background-color: var(--maroon); color: #ffffff; border: none; border-radius: 4px; padding: 14px; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%; text-align: center; transition: background 0.2s; margin-top: 4px; }
 .btn-primary:hover { background-color: var(--maroon-dark); }
+.btn-primary:disabled { background-color: var(--text-meta); cursor: not-allowed; }
 
 /* Status Toast */
-#mst { display: block; font-size: 13px; color: #d93025; margin-top: 8px; min-height: 18px; font-weight: 600; }
-#err { color: #d93025; font-size: 14px; margin-top: 10px; display: none; font-weight: 600; padding: 10px; background: #fce8e6; border-radius: 4px; }
+#status-toast { display: block; font-size: 13px; color: #0066cc; margin-top: 8px; min-height: 18px; font-weight: 600; }
+#error-message { color: #d93025; font-size: 13.5px; margin-top: 10px; display: none; font-weight: 600; padding: 10px; background: #fce8e6; border-radius: 4px; line-height: 1.4; }
 
 /* Results Area */
-.results-area { flex: 1; overflow-y: auto; border-top: 1px solid var(--border); background: #fff; }
-.result-header { padding: 16px 24px; font-size: 13px; font-weight: 600; color: var(--text-dark); border-bottom: 1px solid #eee; background: #fafafa; position: sticky; top: 0; z-index: 5; line-height: 1.4; }
+.results-area { flex: 1; overflow-y: auto; border-top: 1px solid var(--border); background: #fff; display: none; }
+.result-header { padding: 16px 24px; font-size: 13px; font-weight: 600; color: var(--text-dark); border-bottom: 1px solid #eee; background: #fafafa; position: sticky; top: 0; z-index: 5; line-height: 1.5; }
 
-.list-item { display: flex; padding: 20px 24px; border-bottom: 1px solid #eee; align-items: flex-start; }
+.list-item { display: flex; padding: 16px 24px; border-bottom: 1px solid #eee; align-items: flex-start; }
 .list-item:hover { background: #fdfdfd; }
 
-.marker-icon { position: relative; width: 28px; height: 38px; flex-shrink: 0; margin-right: 16px; }
+.marker-icon { position: relative; width: 24px; height: 32px; flex-shrink: 0; margin-right: 16px; }
 .marker-icon svg { width: 100%; height: 100%; fill: var(--maroon); }
-.marker-num { position: absolute; top: 6px; left: 0; width: 100%; text-align: center; color: white; font-size: 14px; font-weight: 700; line-height: 1; }
+.marker-num { position: absolute; top: 5px; left: 0; width: 100%; text-align: center; color: white; font-size: 13px; font-weight: 700; line-height: 1; }
 
 .item-content { flex: 1; min-width: 0; }
-.item-title { font-size: 16px; color: var(--text-dark); margin: 0 0 6px 0; font-weight: 700; }
-.item-desc { font-size: 14px; color: var(--text-light); margin: 0 0 6px 0; line-height: 1.5; font-weight: 500; }
-.item-tip { font-size: 12px; color: var(--text-meta); font-style: italic; font-weight: 500; }
+.item-title { font-size: 15px; color: var(--text-dark); margin: 0 0 4px 0; font-weight: 700; }
+.item-tip { font-size: 12px; color: var(--text-meta); line-height: 1.4; font-weight: 500; }
 
 .item-meta { text-align: right; margin-left: 12px; }
-.meta-price { font-size: 16px; font-weight: 700; color: var(--maroon); margin-bottom: 4px; white-space: nowrap; }
-.meta-time { font-size: 13px; color: var(--text-light); font-weight: 600; white-space: nowrap; }
+.meta-price { font-size: 15px; font-weight: 700; color: var(--maroon); margin-bottom: 4px; white-space: nowrap; }
 
 /* Map Area */
 .map-container { flex: 1; position: relative; z-index: 1; }
@@ -102,8 +105,8 @@ body, html {
 /* Mobile Layout */
 @media (max-width: 768px) {
     .app-container { flex-direction: column-reverse; }
-    .sidebar { width: 100%; height: 55dvh; border-right: none; border-top: 1px solid var(--border); box-shadow: 0 -4px 16px rgba(0,0,0,0.1); }
-    .map-container { height: 45dvh; flex: none; }
+    .sidebar { width: 100%; height: 60dvh; border-right: none; border-top: 1px solid var(--border); box-shadow: 0 -4px 16px rgba(0,0,0,0.1); }
+    .map-container { height: 40dvh; flex: none; }
 }
 </style>
 </head>
@@ -113,42 +116,43 @@ body, html {
     <aside class="sidebar">
         <div class="sidebar-header">
             <div class="brand-header">
-                <!-- Renamed to standard format. Update your repo file to 'logo.png' -->
-                <img src="logo.png" alt="Tara, Cavite! Logo" class="app-logo">
+                <img src="logo.png" alt="Tara, Cavite! Logo" class="app-logo" onerror="this.style.display='none'">
                 <h1 class="app-title">Tara, Cavite!</h1>
             </div>
             
             <div class="search-controls">
                 <div class="input-wrapper">
-                    <input type="text" id="from" placeholder="Enter pickup location..." autocomplete="off">
-                    <div id="from-sugg" class="sugg-box"></div>
+                    <label for="input-origin" class="sr-only">Origin Location</label>
+                    <input type="text" id="input-origin" placeholder="Enter pickup location..." autocomplete="off">
+                    <div id="sugg-origin" class="sugg-box"></div>
                 </div>
                 
                 <div style="display:flex; justify-content: space-between; padding: 0 4px;">
-                    <button class="btn-loc" id="swap">⇅ Swap points</button>
-                    <button class="btn-loc" id="locb">📍 Use my GPS location</button>
+                    <button class="btn-loc" id="btn-swap">⇅ Swap points</button>
+                    <button class="btn-loc" id="btn-gps">📍 Use my GPS location</button>
                 </div>
 
                 <div class="input-wrapper">
-                    <input type="text" id="to" placeholder="Where do you want to go?" autocomplete="off">
-                    <div id="to-sugg" class="sugg-box"></div>
+                    <label for="input-dest" class="sr-only">Destination Location</label>
+                    <input type="text" id="input-dest" placeholder="Where do you want to go?" autocomplete="off">
+                    <div id="sugg-dest" class="sugg-box"></div>
                 </div>
                 
                 <div class="options">
-                    <label><input type="checkbox" id="disc"> 20% Discount</label>
-                    <label><input type="checkbox" id="peak"> Rush Hour</label>
+                    <label><input type="checkbox" id="toggle-discount"> 20% Discount</label>
+                    <label><input type="checkbox" id="toggle-peak"> Rush Hour</label>
                 </div>
                 
-                <button class="btn-primary" id="go">Search Commute</button>
+                <button class="btn-primary" id="btn-search">Calculate Fare Estimates</button>
             </div>
             
-            <span id="mst"></span>
-            <div id="err"></div>
+            <span id="status-toast" aria-live="polite"></span>
+            <div id="error-message" role="alert"></div>
         </div>
 
-        <div class="results-area" id="results-area" style="display:none;">
-            <div class="result-header" id="res-count"></div>
-            <div id="res"></div>
+        <div class="results-area" id="results-area">
+            <div class="result-header" id="results-header"></div>
+            <div id="results-list"></div>
         </div>
     </aside>
 
@@ -157,236 +161,443 @@ body, html {
     </main>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
 <script>
-var $ = function(i){return document.getElementById(i)};
-var HUBS = ["Bacoor","Imus","Dasmariñas","Trece Martires","Zapote (Las Piñas)"];
-var ALL = [["Bacoor",14.459,120.944],["Imus",14.430,120.937],["Dasmariñas",14.329,120.937],["Trece Martires",14.282,120.867],["Zapote (Las Piñas)",14.450,120.977]];
-
-var ORIGIN = null;
-var DEST = null;
-
-function km(a,b){var c=window.CACHE&&CACHE[key(a,b)];if(c)return c.km;var r=Math.PI/180,x=(b[2]-a[2])*r*Math.cos((a[1]+b[1])*r/2),y=(b[1]-a[1])*r;return Math.max(.8,Math.sqrt(x*x+y*y)*6371*1.35)}
-function key(a,b){return a[1].toFixed(4)+","+a[2].toFixed(4)+"|"+b[1].toFixed(4)+","+b[2].toFixed(4)}
-function pt(n){ return ALL.find(p => p[0]===n); }
-
-var R=Math.round,C=Math.ceil,X=Math.max;
-
-var MODES=[
-{k:"tri",n:"Tricycle",sp:20,w:3,ok:function(d){return d<=9},f:function(d){var b=20+X(0,d-2)*10;return[R(b*.8),R(b*1.3)]},t:"Short local rides. Agree on fare beforehand.",nt:1,nd:1},
-{k:"jeep",n:"Traditional Jeepney",sp:17,w:6,ok:function(d){return d>=1 && d<=35},f:function(d){var x=C(14+X(0,d-4)*2);return[x,x]},t:"Say “para po” at your stop.",tr:1},
-{k:"mjeep",n:"Modern Jeep",sp:19,w:8,ok:function(d){return d>=3 && d<=45},f:function(d){var x=C(17+X(0,d-4)*2.4);return[x,x]},t:"Air-conditioned on selected routes.",tr:1},
-{k:"uv",n:"UV Express",sp:28,w:12,ok:function(d){return d>=6},f:function(d){var b=X(40,d*3.2);return[R(b*.9),R(b*1.15)]},t:"Leaves from terminals once full.",tr:1,nd:1},
-{k:"bus",n:"Bus (Ordinary/Aircon)",sp:24,w:12,ok:function(d){return d>=9},f:function(d){return[C(12+X(0,d-5)*2.2),C(15+X(0,d-5)*2.45)]},t:"Wait along highway or terminal.",tr:1},
-{k:"tnvs",n:"Ride-Hailing (Grab)",sp:30,w:6,ok:function(d){return d>=2},f:function(d){var b=85+14*d;return[R(b*.9),R(b*1.25)]},t:"Comfortable door-to-door option.",nt:1,nd:1}];
-
-function plan(a,b){var d=km(a,b),hub=null;
-if(d>14){var best=1e9;HUBS.forEach(function(h){var p=pt(h);if(!p)return;var s=km(a,p)+km(p,b);if(s<=d*1.2&&s<best){best=s;hub=p}})}
-return{d:d,hub:hub}}
-
-function calc(a,b,disc,peak){var o=a[0],t=b[0];var pl=plan(a,b),d=pl.d,out=[],sf=peak?.7:1;
-MODES.forEach(function(m){if(!m.ok(d))return;var lo,hi,time,legs=pl.hub&&m.tr;
-if(legs){var d1=km(a,pl.hub),d2=km(pl.hub,b),f1=m.f(d1),f2=m.f(d2);lo=f1[0]+f2[0];hi=f1[1]+f2[1];d=d1+d2;time=(d1+d2)/(m.sp*sf)*60+m.w*2+5}
-else{var f=m.f(pl.d);lo=f[0];hi=f[1];time=pl.d/(m.sp*sf)*60+m.w}
-if(peak&&m.k=="tnvs"){lo=R(lo*1.15);hi=R(hi*1.15)}
-if(disc&&m.tr){lo=R(lo*.8);hi=R(hi*.8)}
-var s=["Board a "+m.n.toLowerCase().split(" (")[0]+" from "+o+"."];
-if(legs)s.push("Transfer at "+pl.hub[0]+" to a "+m.n.toLowerCase().split(" (")[0]+" bound for "+t+".");
-if(m.k=="tri"||m.k=="tnvs")s[0]="Take a direct "+m.n.toLowerCase().split(" (")[0]+" from "+o+" to "+t+".";
-else s.push("Alight near "+t+".");
-out.push({m:m,lo:lo,hi:hi,time:time,steps:s.join(" "),hub:legs?pl.hub[0]:null})});
-return{d:pl.d,list:out}}
-
-function mid(r){return(r.lo+r.hi)/2}
-function render(isFallback){
-    var e=$("err"),ra=$("results-area");e.style.display="none";
-    if(!ORIGIN||!DEST){e.textContent="Please select specific locations from the dropdowns or map.";e.style.display="block";ra.style.display="none";return}
-    
-    var r=calc(ORIGIN,DEST,$("disc").checked,$("peak").checked),L=r.list.sort(function(a,b){return mid(a)-mid(b)});
-    
-    var distLabel = isFallback ? "est. straight-line distance" : "driving distance";
-    $("res-count").innerHTML = 'Showing ' + L.length + ' routes (' + R(r.d) + ' km ' + distLabel + ') <br><span style="font-weight:400; color:#666; font-size:11px;">Fares are estimates based on LTFRB guidelines.</span>';
-    
-    var h='';
-    L.forEach(function(x, index){
-        var p=x.lo==x.hi?"Est. ₱"+x.lo:"Est. ₱"+x.lo+"–"+x.hi,t1=R(x.time/5)*5||5,t2=t1+R(x.time*.25/5)*5+5;
-        h+='<div class="list-item"><div class="marker-icon"><svg viewBox="0 0 24 36"><path d="M12 0C5.373 0 0 5.373 0 12c0 8.44 12 24 12 24s12-15.56 12-24C24 5.373 18.627 0 12 0z"/></svg><div class="marker-num">'+(index+1)+'</div></div><div class="item-content"><h3 class="item-title">'+x.m.n+'</h3><p class="item-desc">'+x.steps+'</p><p class="item-tip">'+x.m.t+'</p></div><div class="item-meta"><div class="meta-price">'+p+'</div><div class="meta-time">'+t1+'–'+t2+' min</div></div></div>';
-    });
-    
-    $("res").innerHTML=h;
-    ra.style.display="block";
-}
-
-$("go").onclick = function(){ render(false); };
-$("disc").onchange=$("peak").onchange=function(){if(ORIGIN&&DEST&&$("res").innerHTML)render(false)};
-
-$("swap").onclick=function(){
-    var t_pt = ORIGIN; ORIGIN = DEST; DEST = t_pt;
-    var t_val = $("from").value; $("from").value = $("to").value; $("to").value = t_val;
-    after();
+// --- State Management ---
+const appState = {
+    origin: null, // format: { name: string, lat: number, lng: number }
+    dest: null,
+    routeGeoJSON: null,
+    distanceKm: 0,
+    isFallbackDistance: false,
+    gpsWatchId: null,
+    gpsTimeoutId: null
 };
 
-/* Photon API (OSM) for Autocomplete */
-function bindSearch(id, isDest){
-    var inp = $(id), box =$(id+"-sugg"), timeout;
-    inp.addEventListener('input', function(){
-        if(!inp.value) { if(isDest) DEST=null; else ORIGIN=null; } 
-        clearTimeout(timeout);
-        if(inp.value.length < 3) { box.innerHTML=""; return; }
-        timeout = setTimeout(function(){
-            // Photon API biased towards Cavite coordinates
-            fetch("https://photon.komoot.io/api/?q="+encodeURIComponent(inp.value)+"&lat=14.33&lon=120.93&limit=5")
-            .then(r=>r.json()).then(function(d){
-                box.innerHTML="";
-                if(!d.features) return;
-                d.features.forEach(function(f){
-                    var p = f.properties;
-                    var name = p.name || p.street;
-                    if(!name) return;
-                    var context = [p.city || p.county, p.state].filter(Boolean).join(", ");
-                    var dEl = document.createElement("div");
-                    dEl.className = "sugg-item";
-                    dEl.innerHTML = "<strong>"+name+"</strong><small>" + context + "</small>";
-                    dEl.onclick = function(){
-                        inp.value = name;
-                        box.innerHTML = "";
-                        var pt = [name, f.geometry.coordinates[1], f.geometry.coordinates[0]];
-                        if(isDest) DEST = pt; else ORIGIN = pt;
-                        after();
-                    };
-                    box.appendChild(dEl);
+// --- Fare Constants & Logic ---
+// Distance limits enforced to prevent absurd suggestions (e.g. 60km tricycle ride)
+const MAX_COMMUTE_DISTANCE = 65; 
+
+const TRANSPORT_MODES = [
+    {
+        id: "tri", name: "Tricycle", speed: 20, 
+        isValid: (km) => km <= 4, // Tricycles usually limited to short intra-city trips
+        calculateFare: (km) => { const base = 20 + Math.max(0, km - 2) * 10; return [Math.round(base * 0.8), Math.round(base * 1.3)]; },
+        tip: "Special trips are negotiated. Agree on fare beforehand."
+    },
+    {
+        id: "jeep", name: "Traditional Jeepney", speed: 17, 
+        isValid: (km) => km >= 1 && km <= 35, 
+        calculateFare: (km) => { const fare = Math.ceil(13 + Math.max(0, km - 4) * 1.8); return [fare, fare]; },
+        tip: "Standard LTFRB estimated distance fare."
+    },
+    {
+        id: "mjeep", name: "Modern Jeepney", speed: 19, 
+        isValid: (km) => km >= 2 && km <= 40, 
+        calculateFare: (km) => { const fare = Math.ceil(15 + Math.max(0, km - 4) * 2.2); return [fare, fare]; },
+        tip: "Air-conditioned. Standard LTFRB estimated fare."
+    },
+    {
+        id: "uv", name: "UV Express", speed: 28, 
+        isValid: (km) => km >= 8 && km <= 60, 
+        calculateFare: (km) => { const base = Math.max(40, km * 2.5); return [Math.round(base * 0.9), Math.round(base * 1.15)]; },
+        tip: "Point-to-point terminals. Fares vary by specific franchise."
+    },
+    {
+        id: "bus", name: "Bus (Ordinary/Aircon)", speed: 24, 
+        isValid: (km) => km >= 10, 
+        calculateFare: (km) => { return [Math.ceil(11 + Math.max(0, km - 5) * 1.9), Math.ceil(13 + Math.max(0, km - 5) * 2.25)]; },
+        tip: "Provincial/City bus rates applied."
+    },
+    {
+        id: "tnvs", name: "Ride-Hailing (e.g. Grab)", speed: 30, 
+        isValid: (km) => km >= 2, 
+        calculateFare: (km) => { const base = 85 + (14 * km); return [Math.round(base * 0.9), Math.round(base * 1.25)]; },
+        tip: "Dynamic pricing. Surges significantly during rain or rush hour."
+    }
+];
+
+// --- Utility Functions ---
+
+// DOM Helpers
+const getEl = (id) => document.getElementById(id);
+
+// Strictly safely escape HTML to prevent XSS from OSM data
+const sanitizeText = (str) => {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+};
+
+// UI Feedback
+function showStatus(message) {
+    const toast = getEl("status-toast");
+    toast.textContent = message;
+    if (message) setTimeout(() => { if (toast.textContent === message) toast.textContent = ""; }, 4000);
+}
+
+function showError(message) {
+    const errBox = getEl("error-message");
+    const resultsArea = getEl("results-area");
+    if (message) {
+        errBox.textContent = message;
+        errBox.style.display = "block";
+        resultsArea.style.display = "none";
+    } else {
+        errBox.style.display = "none";
+    }
+}
+
+// True Haversine Formula for accurate fallback distance
+function calculateHaversine(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Earth radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// --- Map Initialization ---
+const map = L.map("map", {zoomControl: false}).setView([14.30, 120.93], 10);
+L.control.zoom({position: 'bottomright'}).addTo(map);
+// Legally required OSM attribution restored
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: "&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
+}).addTo(map);
+const mapLayerGroup = L.layerGroup().addTo(map);
+
+function createCustomMarker(className) {
+    return L.divIcon({
+        className: "",
+        html: `<div class="mk ${sanitizeText(className)}"></div>`,
+        iconSize: [24, 34],
+        iconAnchor: [12, 34]
+    });
+}
+
+// --- Core Application Logic ---
+
+function drawMapElements() {
+    mapLayerGroup.clearLayers();
+    const boundsPoints = [];
+    
+    if (appState.origin) {
+        const isGps = appState.origin.name === "My GPS Location";
+        const originMarker = L.marker([appState.origin.lat, appState.origin.lng], {
+            icon: createCustomMarker(isGps ? "me2" : ""),
+            draggable: isGps
+        }).addTo(mapLayerGroup).bindTooltip(sanitizeText(appState.origin.name));
+        
+        if (isGps) {
+            originMarker.on("dragend", (e) => {
+                const pos = e.target.getLatLng();
+                appState.origin = { name: "My GPS Location", lat: pos.lat, lng: pos.lng };
+                stopGpsTracking();
+                fetchRouteAndRender();
+            });
+        }
+        boundsPoints.push([appState.origin.lat, appState.origin.lng]);
+    }
+    
+    if (appState.dest) {
+        L.marker([appState.dest.lat, appState.dest.lng], {
+            icon: createCustomMarker("dest")
+        }).addTo(mapLayerGroup).bindTooltip(sanitizeText(appState.dest.name));
+        boundsPoints.push([appState.dest.lat, appState.dest.lng]);
+    }
+    
+    if (appState.routeGeoJSON) {
+        L.polyline(appState.routeGeoJSON, {color: "#731320", weight: 5, opacity: 0.9}).addTo(mapLayerGroup);
+        map.fitBounds(appState.routeGeoJSON, {padding: [60, 60]});
+    } else if (boundsPoints.length === 2) {
+        L.polyline(boundsPoints, {color: "#888", weight: 2, dashArray: "5 5"}).addTo(mapLayerGroup);
+        map.fitBounds(boundsPoints, {padding: [60, 60]});
+    } else if (boundsPoints.length === 1) {
+        map.setView(boundsPoints[0], 14);
+    }
+}
+
+function fetchRouteAndRender() {
+    showError("");
+    getEl("results-area").style.display = "none";
+    appState.routeGeoJSON = null;
+    drawMapElements();
+    
+    if (!appState.origin || !appState.dest) return;
+
+    // Use Haversine as baseline
+    const straightLineDistance = calculateHaversine(appState.origin.lat, appState.origin.lng, appState.dest.lat, appState.dest.lng);
+    
+    if (straightLineDistance > MAX_COMMUTE_DISTANCE) {
+        showError(`Distance exceeds supported Cavite commute range (${MAX_COMMUTE_DISTANCE}km max).`);
+        return;
+    }
+
+    showStatus("Calculating route network...");
+    getEl("btn-search").disabled = true;
+
+    // OSRM Routing
+    fetch(`https://router.project-osrm.org/route/v1/driving/${appState.origin.lng},${appState.origin.lat};${appState.dest.lng},${appState.dest.lat}?overview=full&geometries=geojson`)
+        .then(res => res.json())
+        .then(data => {
+            if (!data.routes || data.routes.length === 0) throw new Error("No road route found");
+            const route = data.routes[0];
+            appState.distanceKm = route.distance / 1000;
+            appState.routeGeoJSON = route.geometry.coordinates.map(c => [c[1], c[0]]); // Leaflet uses Lat,Lng
+            appState.isFallbackDistance = false;
+            
+            showStatus("");
+            getEl("btn-search").disabled = false;
+            drawMapElements();
+            renderFareEstimates();
+        })
+        .catch(err => {
+            console.warn("Routing failed, falling back to Haversine", err);
+            // Fallback to straight-line distance * 1.3 (rough road factor)
+            appState.distanceKm = straightLineDistance * 1.3;
+            appState.isFallbackDistance = true;
+            
+            showStatus("");
+            getEl("btn-search").disabled = false;
+            drawMapElements(); // Will draw dotted line
+            renderFareEstimates();
+        });
+}
+
+function renderFareEstimates() {
+    if (appState.distanceKm > MAX_COMMUTE_DISTANCE) {
+        showError(`Calculated road distance (${Math.round(appState.distanceKm)}km) exceeds supported range.`);
+        return;
+    }
+
+    const isDiscount = getEl("toggle-discount").checked;
+    const isPeak = getEl("toggle-peak").checked;
+    const peakMultiplier = isPeak ? 1.2 : 1.0;
+    const discountMultiplier = isDiscount ? 0.8 : 1.0;
+
+    let validModes = [];
+
+    TRANSPORT_MODES.forEach(mode => {
+        if (!mode.isValid(appState.distanceKm)) return;
+        
+        let [lowFare, highFare] = mode.calculateFare(appState.distanceKm);
+        
+        if (mode.id === "tnvs") {
+            lowFare = Math.round(lowFare * peakMultiplier);
+            highFare = Math.round(highFare * peakMultiplier);
+        } else {
+            lowFare = Math.round(lowFare * discountMultiplier);
+            highFare = Math.round(highFare * discountMultiplier);
+        }
+
+        validModes.push({
+            mode: mode,
+            lowFare: lowFare,
+            highFare: highFare,
+            avgFare: (lowFare + highFare) / 2
+        });
+    });
+
+    validModes.sort((a, b) => a.avgFare - b.avgFare);
+
+    const distLabel = appState.isFallbackDistance ? "est. straight-line distance" : "driving distance";
+    const headerHtml = `
+        Showing estimated fares for <strong>${Math.round(appState.distanceKm)} km</strong> (${distLabel})
+        <br><span style="font-weight:400; color:var(--text-meta); font-size:11.5px; display:block; margin-top:4px;">
+        Fares are rough estimates based on standardized base rates and distance. Always confirm with the driver.
+        </span>
+    `;
+    getEl("results-header").innerHTML = headerHtml;
+
+    let listHtml = "";
+    validModes.forEach((item, index) => {
+        const priceText = item.lowFare === item.highFare ? `Est. ₱${item.lowFare}` : `Est. ₱${item.lowFare}–${item.highFare}`;
+        listHtml += `
+            <div class="list-item">
+                <div class="marker-icon">
+                    <svg viewBox="0 0 24 36"><path d="M12 0C5.373 0 0 5.373 0 12c0 8.44 12 24 12 24s12-15.56 12-24C24 5.373 18.627 0 12 0z"/></svg>
+                    <div class="marker-num">${index + 1}</div>
+                </div>
+                <div class="item-content">
+                    <h3 class="item-title">${sanitizeText(item.mode.name)}</h3>
+                    <p class="item-tip">${sanitizeText(item.mode.tip)}</p>
+                </div>
+                <div class="item-meta">
+                    <div class="meta-price">${sanitizeText(priceText)}</div>
+                </div>
+            </div>
+        `;
+    });
+
+    getEl("results-list").innerHTML = listHtml;
+    getEl("results-area").style.display = "block";
+}
+
+// --- Autocomplete (Photon API) ---
+function setupAutocomplete(inputId, suggestionBoxId, isDestination) {
+    const inputEl = getEl(inputId);
+    const boxEl = getEl(suggestionBoxId);
+    let debounceTimer;
+
+    inputEl.addEventListener('input', () => {
+        if (!inputEl.value) { 
+            if (isDestination) appState.dest = null; else appState.origin = null; 
+        }
+        
+        clearTimeout(debounceTimer);
+        if (inputEl.value.length < 3) { boxEl.innerHTML = ""; return; }
+        
+        debounceTimer = setTimeout(() => {
+            // Photon API explicitly allows search-as-you-type. Biased to Cavite coordinates.
+            fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(inputEl.value)}&lat=14.33&lon=120.93&limit=5`)
+                .then(res => res.json())
+                .then(data => {
+                    boxEl.innerHTML = "";
+                    if (!data.features) return;
+                    
+                    data.features.forEach(feature => {
+                        const props = feature.properties;
+                        const name = props.name || props.street;
+                        if (!name) return;
+                        
+                        const context = [props.city || props.county, props.state].filter(Boolean).join(", ");
+                        
+                        const itemDiv = document.createElement("div");
+                        itemDiv.className = "sugg-item";
+                        // Safely create inner HTML structure
+                        itemDiv.innerHTML = `<strong>${sanitizeText(name)}</strong><small>${sanitizeText(context)}</small>`;
+                        
+                        itemDiv.addEventListener('click', () => {
+                            inputEl.value = name;
+                            boxEl.innerHTML = "";
+                            const pointData = { name: name, lat: feature.geometry.coordinates[1], lng: feature.geometry.coordinates[0] };
+                            if (isDestination) appState.dest = pointData; else appState.origin = pointData;
+                            fetchRouteAndRender();
+                        });
+                        
+                        // Keyboard accessibility for dropdown
+                        itemDiv.setAttribute('tabindex', '0');
+                        itemDiv.addEventListener('keydown', (e) => {
+                            if(e.key === 'Enter') itemDiv.click();
+                        });
+
+                        boxEl.appendChild(itemDiv);
+                    });
                 })
-            })
+                .catch(err => console.error("Autocomplete failed:", err));
         }, 400); 
     });
-    document.addEventListener('click', function(e) { if(!inp.contains(e.target) && !box.contains(e.target)) box.innerHTML = ""; });
-}
 
-bindSearch("from", false);
-bindSearch("to", true);
-
-/* Map Initialisation with proper attribution */
-var map=L.map("map", {zoomControl: false}).setView([14.30,120.93],10);
-L.control.zoom({position: 'bottomright'}).addTo(map);
-L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"}).addTo(map);
-var CACHE={},LY=L.layerGroup().addTo(map);
-
-function st(s){ 
-    var m = $("mst");
-    m.textContent=s; 
-    if(s) setTimeout(function(){ if(m.textContent==s) m.textContent=""; }, 5000); 
-}
-
-function mk(c){return L.divIcon({className:"",html:'<div class="mk '+c+'"></div>',iconSize:[24,34],iconAnchor:[12,34]})}
-
-function draw(rt){
-    LY.clearLayers();var q=[];
-    
-    if(ORIGIN){
-        var fIsMe = (ORIGIN[0] === "My GPS Location");
-        var om=L.marker([ORIGIN[1],ORIGIN[2]],{icon:mk(fIsMe?"me2":""),draggable:fIsMe}).addTo(LY).bindTooltip(ORIGIN[0]);
-        if(fIsMe)om.on("dragend",function(e){
-            var p=e.target.getLatLng();
-            ORIGIN=["My GPS Location",p.lat,p.lng,0];
-            if(WID!==null){navigator.geolocation.clearWatch(WID);WID=null;}
-            if(TID!==null){clearTimeout(TID);TID=null;}
-            after();
-        });
-        q.push([ORIGIN[1],ORIGIN[2]]);
-    }
-    if(DEST){L.marker([DEST[1],DEST[2]],{icon:mk("dest")}).addTo(LY).bindTooltip(DEST[0]); q.push([DEST[1],DEST[2]]);}
-    
-    if(rt)L.polyline(rt,{color:"#731320",weight:5,opacity:.9}).addTo(LY);
-    else if(q.length==2)L.polyline(q,{color:"#888",weight:2,dashArray:"5 5"}).addTo(LY);
-    
-    if(rt)map.fitBounds(rt,{padding:[60, 60]});
-    else if(q.length==2)map.fitBounds(q,{padding:[60, 60]});
-    else if(q.length==1)map.setView(q[0],14);
-}
-
-function route(a,b){var k=key(a,b);if(CACHE[k])return Promise.resolve(CACHE[k]);
-return fetch("https://router.project-osrm.org/route/v1/driving/"+a[2]+","+a[1]+";"+b[2]+","+b[1]+"?overview=full&geometries=geojson").then(function(r){return r.json()}).then(function(j){var r=j.routes[0];CACHE[k]={km:r.distance/1000,geo:r.geometry.coordinates.map(function(c){return[c[1],c[0]]})};return CACHE[k]})}
-
-function after(){
-    if(ORIGIN && DEST) $("results-area").style.display="none"; 
-    
-    draw();
-    if(!ORIGIN || !DEST) return;
-
-    st("Mapping route...");
-    route(ORIGIN,DEST).then(function(c){
-        draw(c.geo);
-        st(""); 
-        if($("results-area").style.display === "block") render(false); 
-    }).catch(function(){
-        st("Network error, distance estimated.");
-        if($("results-area").style.display === "block") render(true); // Pass true to show "straight-line" label
-    })
-}
-
-// Map Click to drop a Pin
-map.on("click",function(e){
-    fetch(`https://photon.komoot.io/api/?q=&lat=${e.latlng.lat}&lon=${e.latlng.lng}&limit=1`)
-    .then(r=>r.json()).then(data=>{
-        var shortName = "Dropped Pin";
-        if(data.features && data.features.length > 0) {
-            var p = data.features[0].properties;
-            shortName = p.name || p.street || p.city || "Dropped Pin";
+    // Handle Enter key in input
+    inputEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const firstSugg = boxEl.querySelector('.sugg-item');
+            if(firstSugg) firstSugg.click();
         }
-        DEST = [shortName, e.latlng.lat, e.latlng.lng];
-        $("to").value = shortName;
-        st("Pinned destination near " + shortName);
-        after();
-    }).catch(()=>{
-        DEST = ["Dropped Pin", e.latlng.lat, e.latlng.lng];
-        $("to").value = "Dropped Pin";
-        after();
     });
+
+    document.addEventListener('click', (e) => {
+        if (!inputEl.contains(e.target) && !boxEl.contains(e.target)) boxEl.innerHTML = "";
+    });
+}
+
+setupAutocomplete("input-origin", "sugg-origin", false);
+setupAutocomplete("input-dest", "sugg-dest", true);
+
+// --- Event Listeners ---
+getEl("btn-search").addEventListener("click", fetchRouteAndRender);
+getEl("toggle-discount").addEventListener("change", () => { if (appState.origin && appState.dest) renderFareEstimates(); });
+getEl("toggle-peak").addEventListener("change", () => { if (appState.origin && appState.dest) renderFareEstimates(); });
+
+getEl("btn-swap").addEventListener("click", () => {
+    const tempState = appState.origin;
+    appState.origin = appState.dest;
+    appState.dest = tempState;
+    
+    const inputOrigin = getEl("input-origin");
+    const inputDest = getEl("input-dest");
+    const tempVal = inputOrigin.value;
+    inputOrigin.value = inputDest.value;
+    inputDest.value = tempVal;
+    
+    fetchRouteAndRender();
 });
 
-var WID=null, TID=null;
-function fin(){
-    if(TID!==null){clearTimeout(TID);TID=null;}
-    if(WID!==null){navigator.geolocation.clearWatch(WID);WID=null;}
-    after();
+// Map Tap to Drop Pin
+map.on("click", (e) => {
+    // Reverse geocode to get a readable name
+    fetch(`https://photon.komoot.io/api/?q=&lat=${e.latlng.lat}&lon=${e.latlng.lng}&limit=1`)
+        .then(res => res.json())
+        .then(data => {
+            let shortName = "Dropped Pin";
+            if (data.features && data.features.length > 0) {
+                const p = data.features[0].properties;
+                shortName = p.name || p.street || p.city || "Dropped Pin";
+            }
+            appState.dest = { name: shortName, lat: e.latlng.lat, lng: e.latlng.lng };
+            getEl("input-dest").value = shortName;
+            showStatus(`Pinned destination near ${shortName}`);
+            fetchRouteAndRender();
+        })
+        .catch(() => {
+            appState.dest = { name: "Dropped Pin", lat: e.latlng.lat, lng: e.latlng.lng };
+            getEl("input-dest").value = "Dropped Pin";
+            fetchRouteAndRender();
+        });
+});
+
+// --- Geolocation ---
+function stopGpsTracking() {
+    if (appState.gpsTimeoutId) { clearTimeout(appState.gpsTimeoutId); appState.gpsTimeoutId = null; }
+    if (appState.gpsWatchId) { navigator.geolocation.clearWatch(appState.gpsWatchId); appState.gpsWatchId = null; }
 }
 
-function locate(){
-    if(!navigator.geolocation){st("Location unavailable.");return}
-    st("Locating GPS...");
+getEl("btn-gps").addEventListener("click", () => {
+    if (!navigator.geolocation) { showError("Location unavailable on this browser."); return; }
     
-    $("from").value = "My GPS Location"; 
+    showStatus("Locating GPS...");
+    getEl("input-origin").value = "My GPS Location"; 
+    stopGpsTracking();
+    
+    let bestCoords = null;
+    appState.gpsWatchId = navigator.geolocation.watchPosition(
+        (pos) => {
+            const coords = pos.coords;
+            if (!bestCoords || coords.accuracy < bestCoords.accuracy) bestCoords = coords;
+            
+            appState.origin = { name: "My GPS Location", lat: bestCoords.latitude, lng: bestCoords.longitude };
+            if (!appState.dest) drawMapElements(); 
+            
+            if (Math.round(bestCoords.accuracy) <= 40) { 
+                stopGpsTracking(); 
+                showStatus(""); 
+                if (appState.dest) fetchRouteAndRender();
+            } else {
+                drawMapElements();
+            }
+        },
+        (err) => {
+            showError("Location access denied or unavailable.");
+            getEl("input-origin").value = "";
+            appState.origin = null;
+            stopGpsTracking();
+        },
+        { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+    );
+    
+    appState.gpsTimeoutId = setTimeout(() => { 
+        showStatus(""); 
+        stopGpsTracking(); 
+        if (appState.origin && appState.dest) fetchRouteAndRender();
+    }, 15000);
+});
 
-    if(WID!==null)navigator.geolocation.clearWatch(WID);
-    if(TID!==null)clearTimeout(TID);
-    
-    var best=null;
-    WID=navigator.geolocation.watchPosition(function(r){
-        var c=r.coords;
-        if(!best||c.accuracy<best.accuracy)best=c;
-        ORIGIN=["My GPS Location",best.latitude,best.longitude,best.accuracy];
-        
-        if(!DEST) draw(); 
-        
-        if(R(best.accuracy)<=40) { 
-            fin(); 
-            st(""); 
-        } else {
-            draw();
-        }
-    },function(){
-        st("Location access denied.");
-        $("from").value = "";
-        ORIGIN = null;
-        if(WID!==null){navigator.geolocation.clearWatch(WID);WID=null;}
-        if(TID!==null){clearTimeout(TID);TID=null;}
-    },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
-    
-    TID=setTimeout(function(){ st(""); fin(); }, 15000);
-}
-
-$("locb").onclick=locate;
-draw();
+// Init
+drawMapElements();
 </script>
 </body>
 </html>
