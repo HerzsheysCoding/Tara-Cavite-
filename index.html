@@ -2,198 +2,298 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover">
-<title>BiyaheCavite – Commute &amp; Fare Planner</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+<title>BiyaheCavite – Commute Planner</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600;700&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
 :root {
-    --ink: #000;
-    --surface: #fff;
-    --surface-mute: #f6f6f6;
-    --line: #e2e2e2;
-    --mut: #6b6b6b;
-    --brand: #05a552;
-    --accent: #2f7bff;
-    --warn: #e02424;
-}
-
-@media (prefers-color-scheme: dark) {
-    :root {
-        --ink: #fff;
-        --surface: #121212;
-        --surface-mute: #222;
-        --line: #333;
-        --mut: #a0a0a0;
-    }
+    --maroon: #3d0c11; /* Dark button color from reference */
+    --text-dark: #333333;
+    --text-light: #666666;
+    --text-meta: #888888;
+    --border: #cccccc;
+    --bg-sidebar: #ffffff;
+    --bg-body: #f4f4f4;
 }
 
 * { box-sizing: border-box; }
-body { margin: 0; font-family: 'Montserrat', system-ui, sans-serif; background: #e8eaed; overflow: hidden; -webkit-font-smoothing: antialiased; }
-
-/* Map Background */
-#map { position: fixed; inset: 0; z-index: 1; }
-.leaflet-container { font-family: inherit; }
-.leaflet-control-zoom { border: none !important; box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important; margin-right: 16px !important; margin-top: max(16px, env(safe-area-inset-top, 16px)) !important; }
-.leaflet-bar a { background: var(--surface) !important; color: var(--ink) !important; }
-
-/* Custom Map Markers */
-.mk { width: 14px; height: 14px; border-radius: 50%; background: var(--ink); border: 2px solid #fff; box-shadow: 0 0 0 2px var(--ink); }
-.mk.dest { background: var(--brand); box-shadow: 0 0 0 2px var(--brand); }
-.mk.me2 { background: var(--accent); box-shadow: 0 0 0 2px var(--accent), 0 0 0 8px rgba(47,123,255,.25); }
-
-/* Top Search Card - Absolutely positioned so map is clickable */
-.top-card { 
-    position: absolute; 
-    top: max(16px, env(safe-area-inset-top, 16px)); 
-    left: 16px; 
-    right: 16px; 
-    max-width: 440px; 
-    margin: 0 auto; 
-    z-index: 10; 
-    background: var(--surface); 
-    border-radius: 20px; 
-    box-shadow: 0 6px 24px rgba(0,0,0,0.12); 
-    padding: 16px; 
-    display: flex; 
-    flex-direction: column; 
-    gap: 16px; 
+body, html { 
+    margin: 0; 
+    padding: 0; 
+    height: 100vh; 
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+    background-color: var(--bg-body);
+    overflow: hidden;
 }
 
-.nav { display: flex; justify-content: space-between; align-items: center; }
-.brand { font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 6px; color: var(--ink); }
-.brand svg { color: var(--brand); }
-.locb { background: var(--surface-mute); border: none; padding: 8px 14px; border-radius: 99px; font: 600 12px 'Montserrat', sans-serif; color: var(--ink); cursor: pointer; display: flex; align-items: center; gap: 6px; }
+/* Layout */
+.app-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
 
-.planner { display: flex; align-items: center; gap: 14px; background: var(--surface-mute); padding: 12px 16px; border-radius: 16px; }
-.timeline { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 12px; }
-.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink); }
-.dot.end { border-radius: 0; background: var(--brand); } 
-.line { width: 2px; height: 32px; background: var(--line); }
+/* Sidebar */
+.sidebar {
+    width: 400px;
+    min-width: 320px;
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+}
 
-.inputs { flex: 1; display: flex; flex-direction: column; }
-.inputs select { -webkit-appearance: none; appearance: none; border: none; background: transparent; padding: 8px 0; font-family: inherit; font-size: 16px; font-weight: 600; color: var(--ink); width: 100%; outline: none; cursor: pointer; text-overflow: ellipsis; }
-.inputs hr { border: none; height: 1px; background: var(--line); margin: 0; width: 100%; }
-.inputs select:focus { color: var(--accent); }
+.sidebar-header {
+    padding: 24px 24px 16px;
+}
 
-.swap { background: var(--surface); box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 16px; color: var(--ink); cursor: pointer; display: grid; place-items: center; margin-left: -8px; z-index: 2; }
+.app-title {
+    margin: 0 0 20px 0;
+    font-size: 26px;
+    font-weight: 400;
+    color: #444;
+}
+
+/* Search Controls */
+.search-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.input-box {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: #fff;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+}
+
+.input-box select {
+    width: 100%;
+    border: none;
+    outline: none;
+    font-size: 15px;
+    color: var(--text-dark);
+    background: transparent;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.btn-loc {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #0066cc;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-loc:hover { text-decoration: underline; }
+
+.options {
+    display: flex;
+    gap: 16px;
+    font-size: 13px;
+    color: var(--text-dark);
+    margin: 4px 0;
+}
+.options label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.options input { cursor: pointer; margin: 0; }
+
+.btn-primary {
+    background-color: var(--maroon);
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
+    transition: background 0.2s;
+    margin-top: 4px;
+}
+.btn-primary:hover { background-color: #2b080c; }
 
 /* Status Toast */
-.mapbar { position: absolute; top: calc(100% + 12px); left: 0; right: 0; display: flex; justify-content: center; pointer-events: none; }
-#mst { background: var(--ink); color: #fff; padding: 8px 16px; border-radius: 99px; font-size: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: opacity 0.3s; }
-#mst:empty { opacity: 0; }
+#mst {
+    display: block;
+    font-size: 12px;
+    color: #d93025;
+    margin-top: 8px;
+    min-height: 18px;
+}
+#err { color: #d93025; font-size: 13px; margin-top: 10px; display: none; }
 
-/* Bottom Action Sheet - Absolutely positioned */
-.bottom-sheet { 
-    position: absolute; 
-    bottom: max(16px, env(safe-area-inset-bottom, 16px)); 
-    left: 16px; 
-    right: 16px; 
-    max-width: 440px; 
-    margin: 0 auto; 
-    z-index: 10; 
-    background: var(--surface); 
-    max-height: 55vh; 
-    display: flex; 
-    flex-direction: column; 
-    padding: 24px 20px; 
-    border-radius: 24px; 
-    box-shadow: 0 -4px 30px rgba(0,0,0,0.15); 
+/* Results Area */
+.results-area {
+    flex: 1;
+    overflow-y: auto;
+    border-top: 1px solid var(--border);
+    background: #fff;
 }
 
-.opts { display: flex; gap: 16px; font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 20px; justify-content: center; flex-wrap: wrap; }
-.opts label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-.opts input { accent-color: var(--brand); width: 18px; height: 18px; cursor: pointer; }
+.result-header {
+    padding: 16px 24px;
+    font-size: 13px;
+    color: var(--text-light);
+    border-bottom: 1px solid #eee;
+    background: #fafafa;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
 
-.go { background: var(--ink); color: #fff; border: none; padding: 18px; border-radius: 16px; font: 700 16px 'Montserrat', sans-serif; cursor: pointer; width: 100%; transition: transform 0.1s; flex: none; }
-.go:active { transform: scale(0.98); }
+/* List Item matching the reference image */
+.list-item {
+    display: flex;
+    padding: 20px 24px;
+    border-bottom: 1px solid #eee;
+    align-items: flex-start;
+}
 
-#err { color: var(--warn); background: rgba(224,36,36,0.1); padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; display: none; font-size: 13px; font-weight: 600; }
-#res { overflow-y: auto; padding-top: 4px; display: none; margin-bottom: 16px; }
+.list-item:hover { background: #fdfdfd; }
 
-#res::-webkit-scrollbar { width: 6px; }
-#res::-webkit-scrollbar-thumb { background: var(--line); border-radius: 99px; }
+.marker-icon {
+    position: relative;
+    width: 28px;
+    height: 38px;
+    flex-shrink: 0;
+    margin-right: 16px;
+}
+.marker-icon svg {
+    width: 100%;
+    height: 100%;
+    fill: var(--maroon);
+}
+.marker-num {
+    position: absolute;
+    top: 6px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+}
 
-/* Results Styling */
-.sum { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.sum h2 { margin: 0; font-size: 16px; font-weight: 800; color: var(--ink); }
-.pill { background: var(--surface-mute); padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; color: var(--mut); }
+.item-content {
+    flex: 1;
+    min-width: 0;
+}
+.item-title {
+    font-size: 16px;
+    color: var(--text-dark);
+    margin: 0 0 6px 0;
+    font-weight: 400;
+}
+.item-desc {
+    font-size: 12px;
+    color: var(--text-light);
+    margin: 0 0 4px 0;
+    line-height: 1.4;
+}
+.item-tip {
+    font-size: 11.5px;
+    color: var(--text-meta);
+}
 
-.mode { display: block; border-bottom: 1px solid var(--line); padding: 16px 0; }
-.mode:last-child { border-bottom: none; }
-.row { display: flex; gap: 14px; align-items: center; }
-.ico { width: 48px; height: 48px; border-radius: 12px; background: var(--surface-mute); display: grid; place-items: center; font-size: 24px; flex: none; }
-.mid { flex: 1; min-width: 0; }
-.mid b { font-size: 15px; font-weight: 700; color: var(--ink); display: block; margin-bottom: 2px; }
-.mid small { display: block; color: var(--mut); font-size: 12px; font-weight: 500; }
-.price { text-align: right; font-size: 18px; font-weight: 800; color: var(--ink); }
-.price small { display: block; font-size: 10px; font-weight: 600; color: var(--mut); text-transform: uppercase; }
+.item-meta {
+    text-align: right;
+    margin-left: 12px;
+}
+.meta-price {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 4px;
+}
+.meta-time {
+    font-size: 12px;
+    color: var(--text-light);
+}
 
-.tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: var(--brand); color: #fff; margin-left: 8px; vertical-align: middle; }
-.tag.cheap { background: var(--ink); }
+/* Map Area */
+.map-container {
+    flex: 1;
+    position: relative;
+    z-index: 1;
+}
+#map {
+    width: 100%;
+    height: 100%;
+}
+.leaflet-container { font-family: inherit; }
 
-details { margin-top: 14px; background: var(--surface-mute); padding: 12px; border-radius: 12px; }
-summary { cursor: pointer; font-weight: 600; font-size: 13px; color: var(--ink); list-style: none; display: flex; align-items: center; gap: 6px; }
-summary::before { content: "▼"; font-size: 10px; color: var(--mut); }
-details[open] summary::before { content: "▲"; }
-ol { margin: 10px 0 0; padding-left: 20px; font-size: 13px; color: var(--ink); font-weight: 500; }
-li { margin-bottom: 6px; }
-.tip { margin-top: 10px; font-size: 12px; color: var(--mut); font-weight: 500; display: flex; gap: 6px; }
+/* Custom Leaflet Map Markers */
+.mk { width: 24px; height: 34px; background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.373 0 0 5.373 0 12c0 8.44 12 24 12 24s12-15.56 12-24C24 5.373 18.627 0 12 0z" fill="%233d0c11"/></svg>') no-repeat center; background-size: contain; }
+.mk.dest { background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.373 0 0 5.373 0 12c0 8.44 12 24 12 24s12-15.56 12-24C24 5.373 18.627 0 12 0z" fill="%2305a552"/></svg>') no-repeat center; background-size: contain; }
+.mk.me2 { background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.373 0 0 5.373 0 12c0 8.44 12 24 12 24s12-15.56 12-24C24 5.373 18.627 0 12 0z" fill="%232f7bff"/></svg>') no-repeat center; background-size: contain; }
 
-.gm { display: block; text-align: center; padding: 12px; border-radius: 12px; color: var(--accent); background: rgba(47,123,255,0.1); text-decoration: none; font-weight: 700; font-size: 13px; margin-bottom: 16px; }
-.note { margin-top: 24px; font-size: 11px; color: var(--mut); line-height: 1.6; text-align: center; padding: 0 10px; }
-
-/* Mobile full-bleed flush sheet */
-@media (max-width: 480px) {
-    .bottom-sheet { margin: 0; border-radius: 24px 24px 0 0; max-height: 60vh; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0)); bottom: 0; left: 0; right: 0; }
-    .top-card { left: 12px; right: 12px; }
-    .leaflet-control-zoom { display: none; }
+/* Mobile Layout */
+@media (max-width: 768px) {
+    .app-container { flex-direction: column-reverse; }
+    .sidebar { width: 100%; height: 50vh; border-right: none; border-top: 1px solid var(--border); box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+    .map-container { height: 50vh; flex: none; }
 }
 </style>
 </head>
 <body>
 
-<div id="map"></div>
+<div class="app-container">
+    <!-- Left Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1 class="app-title">Commute Planner</h1>
+            
+            <div class="search-controls">
+                <div class="input-box">
+                    <select id="from"></select>
+                </div>
+                
+                <div style="display:flex; justify-content: space-between; padding: 0 4px;">
+                    <button class="btn-loc" id="swap">⇅ Swap points</button>
+                    <button class="btn-loc" id="locb">📍 Use my location</button>
+                </div>
 
-<header class="top-card">
-    <div class="nav">
-        <div class="brand">
-            <svg width="24" height="20" viewBox="0 0 30 26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"><path d="M2 4l6 18 7-12 7 12 6-18"/></svg>
-            BiyaheCavite
+                <div class="input-box">
+                    <select id="to"></select>
+                </div>
+                
+                <div class="options">
+                    <label><input type="checkbox" id="disc"> 20% Discount</label>
+                    <label><input type="checkbox" id="peak"> Rush Hour</label>
+                </div>
+                
+                <button class="btn-primary" id="go">Find Nearest Route</button>
+            </div>
+            
+            <span id="mst"></span>
+            <div id="err"></div>
         </div>
-        <button class="locb" id="locb">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
-            Locate
-        </button>
-    </div>
-    
-    <div class="planner">
-        <div class="timeline">
-            <div class="dot"></div>
-            <div class="line"></div>
-            <div class="dot end"></div>
-        </div>
-        <div class="inputs">
-            <select id="from"></select>
-            <hr>
-            <select id="to"></select>
-        </div>
-        <button class="swap" id="swap" aria-label="Swap">⇅</button>
-    </div>
-    
-    <div class="mapbar"><span id="mst"></span></div>
-</header>
 
-<div class="bottom-sheet">
-    <div id="err"></div>
-    
-    <div id="res"></div>
-    
-    <div class="opts">
-        <label><input type="checkbox" id="disc"> Student/Senior (20% off)</label>
-        <label><input type="checkbox" id="peak"> Rush hour</label>
-    </div>
-    <button class="go" id="go">Find my commute</button>
+        <div class="results-area" id="results-area" style="display:none;">
+            <div class="result-header" id="res-count"></div>
+            <div id="res"></div>
+        </div>
+    </aside>
+
+    <!-- Right Map -->
+    <main class="map-container">
+        <div id="map"></div>
+    </main>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -203,7 +303,7 @@ var M=[["Alabang (Muntinlupa)",14.418,121.043],["Baclaran / Pasay",14.537,121.00
 var ALL=P.concat(M),HUBS=["Bacoor","Imus","Dasmariñas","Trece Martires","Zapote (Las Piñas)"];
 var $=function(i){return document.getElementById(i)};
 
-function fill(s){var h='<option value="">Where '+ (s.id=='from'?'from?':'to?') +'</option><option value="ME" disabled>📍 My location</option><option value="PIN" disabled>📌 Dropped pin</option><optgroup label="Cavite">';P.forEach(function(p){h+='<option>'+p[0]+'</option>'});h+='</optgroup><optgroup label="Metro Manila hubs">';M.forEach(function(p){h+='<option>'+p[0]+'</option>'});s.innerHTML=h+'</optgroup>'}
+function fill(s){var h='<option value="">Search a '+ (s.id=='from'?'pickup':'drop-off') +' location</option><option value="ME" disabled>📍 My location</option><option value="PIN" disabled>📌 Dropped pin</option><optgroup label="Cavite">';P.forEach(function(p){h+='<option>'+p[0]+'</option>'});h+='</optgroup><optgroup label="Metro Manila hubs">';M.forEach(function(p){h+='<option>'+p[0]+'</option>'});s.innerHTML=h+'</optgroup>'}
 fill($("from"));fill($("to"));
 
 var ME=null,PIN=null,pinNear="";
@@ -213,12 +313,12 @@ function km(a,b){var c=window.CACHE&&CACHE[a[1].toFixed(4)+","+a[2].toFixed(4)+"
 var R=Math.round,C=Math.ceil,X=Math.max;
 
 var MODES=[
-{k:"tri",n:"Tricycle",i:"🛺",sp:20,w:3,ok:function(d){return d<=9},f:function(d){var b=20+X(0,d-2)*10;return[R(b*.8),R(b*1.3)]},t:"Short local rides. Agree on fare beforehand.",nt:1,nd:1},
-{k:"jeep",n:"Jeepney",i:"🚐",sp:17,w:6,ok:function(d){return d>=1},f:function(d){var x=C(14+X(0,d-4)*2);return[x,x]},t:"Say “para po” at your stop.",tr:1},
-{k:"mjeep",n:"Modern Jeep",i:"🚌",sp:19,w:8,ok:function(d){return d>=3},f:function(d){var x=C(17+X(0,d-4)*2.4);return[x,x]},t:"Air-conditioned on selected routes.",tr:1},
-{k:"uv",n:"UV Express",i:"🚐",sp:28,w:12,ok:function(d){return d>=6},f:function(d){var b=X(40,d*3.2);return[R(b*.9),R(b*1.15)]},t:"Leaves from terminals once full.",tr:1,nd:1},
-{k:"bus",n:"Bus",i:"🚍",sp:24,w:12,ok:function(d){return d>=9},f:function(d){return[C(12+X(0,d-5)*2.2),C(15+X(0,d-5)*2.45)]},t:"Wait along highway or terminal.",tr:1},
-{k:"tnvs",n:"Grab / inDrive",i:"🚗",sp:30,w:6,ok:function(d){return d>=2},f:function(d){var b=85+14*d;return[R(b*.9),R(b*1.25)]},t:"Comfortable door-to-door option.",nt:1,nd:1}];
+{k:"tri",n:"Tricycle",sp:20,w:3,ok:function(d){return d<=9},f:function(d){var b=20+X(0,d-2)*10;return[R(b*.8),R(b*1.3)]},t:"Short local rides. Agree on fare beforehand.",nt:1,nd:1},
+{k:"jeep",n:"Jeepney",sp:17,w:6,ok:function(d){return d>=1},f:function(d){var x=C(14+X(0,d-4)*2);return[x,x]},t:"Say “para po” at your stop.",tr:1},
+{k:"mjeep",n:"Modern Jeep",sp:19,w:8,ok:function(d){return d>=3},f:function(d){var x=C(17+X(0,d-4)*2.4);return[x,x]},t:"Air-conditioned on selected routes.",tr:1},
+{k:"uv",n:"UV Express",sp:28,w:12,ok:function(d){return d>=6},f:function(d){var b=X(40,d*3.2);return[R(b*.9),R(b*1.15)]},t:"Leaves from terminals once full.",tr:1,nd:1},
+{k:"bus",n:"Bus",sp:24,w:12,ok:function(d){return d>=9},f:function(d){return[C(12+X(0,d-5)*2.2),C(15+X(0,d-5)*2.45)]},t:"Wait along highway or terminal.",tr:1},
+{k:"tnvs",n:"Grab / inDrive",sp:30,w:6,ok:function(d){return d>=2},f:function(d){var b=85+14*d;return[R(b*.9),R(b*1.25)]},t:"Comfortable door-to-door option.",nt:1,nd:1}];
 var BD={tri:"Hail a tricycle",jeep:"Board a jeepney",mjeep:"Board a modern jeepney",uv:"Queue at UV terminal",bus:"Queue for a bus",tnvs:"Book a ride-hailing car"};
 
 function plan(a,b){var d=km(a,b),hub=null;
@@ -235,35 +335,28 @@ var s=[BD[m.k]+" in "+o+" bound for "+(legs?pl.hub[0]:t)+"."];
 if(legs)s.push("Transfer at "+pl.hub[0]+" to a "+m.n.toLowerCase().split(" (")[0]+" bound for "+t+".");
 if(m.k=="tri"||m.k=="tnvs")s[0]=BD[m.k]+" from "+o+" straight to "+t+".";
 s.push("Alight in "+t+".");
-out.push({m:m,lo:lo,hi:hi,time:time,steps:s,hub:legs?pl.hub[0]:null})});
+out.push({m:m,lo:lo,hi:hi,time:time,steps:s.join(" "),hub:legs?pl.hub[0]:null})});
 return{d:pl.d,list:out}}
 
 function mid(r){return(r.lo+r.hi)/2}
 function render(){
-    var o=$("from").value,t=$("to").value,e=$("err"),rs=$("res");e.style.display="none";
-    if(!o||!t){e.textContent="Please select both pickup and drop-off points.";e.style.display="block";rs.style.display="none";return}
-    if(o==t){e.textContent="Pickup and drop-off are the same.";e.style.display="block";rs.style.display="none";return}
+    var o=$("from").value,t=$("to").value,e=$("err"),ra=$("results-area");e.style.display="none";
+    if(!o||!t){e.textContent="Please select both pickup and drop-off points.";e.style.display="block";ra.style.display="none";return}
+    if(o==t){e.textContent="Pickup and drop-off cannot be the same.";e.style.display="block";ra.style.display="none";return}
     
     var r=calc(o,t,$("disc").checked,$("peak").checked),L=r.list.sort(function(a,b){return mid(a)-mid(b)});
-    var cheap=L[0], rec=L.slice().sort(function(a,b){return(mid(a)+a.time*.6)-(mid(b)+b.time*.6)})[0];
     
-    var h='<div class="sum"><h2>'+nm(o)+' → '+nm(t)+'</h2><span class="pill">'+R(r.d)+' km</span></div>';
+    $("res-count").innerHTML = 'Showing ' + L.length + ' results near ' + nm(t) + ' (' + R(r.d) + ' km away)';
     
-    var A=pt(o),B=pt(t);
-    h+='<a class="gm" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&origin='+A[1]+","+A[2]+"&destination="+B[1]+","+B[2]+'&travelmode=driving">Open in Google Maps ↗</a><div style="margin-bottom: 24px;">';
-
-    L.forEach(function(x){
-        var tg="";if(x==rec)tg+='<span class="tag">Recommended</span>';if(x==cheap)tg+='<span class="tag cheap">Cheapest</span>';
+    var h='';
+    L.forEach(function(x, index){
         var p=x.lo==x.hi?"₱"+x.lo:"₱"+x.lo+"–"+x.hi,t1=R(x.time/5)*5||5,t2=t1+R(x.time*.25/5)*5+5;
         
-        h+='<div class="mode"><div class="row"><div class="ico">'+x.m.i+'</div><div class="mid"><b>'+x.m.n+tg+'</b><small>'+(x.hub?"1 Transfer":"Direct")+' · '+t1+'–'+t2+' min</small></div><div class="price">'+p+'<small>'+(x.m.nd?"Est":"/Pax")+'</small></div></div><details><summary>Route details</summary><ol>'+x.steps.map(function(s){return"<li>"+s+"</li>"}).join("")+'</ol><div class="tip">💡 '+x.m.t+'</div></details></div>';
+        h+='<div class="list-item"><div class="marker-icon"><svg viewBox="0 0 24 36"><path d="M12 0C5.373 0 0 5.373 0 12c0 8.44 12 24 12 24s12-15.56 12-24C24 5.373 18.627 0 12 0z"/></svg><div class="marker-num">'+(index+1)+'</div></div><div class="item-content"><h3 class="item-title">'+x.m.n+'</h3><p class="item-desc">'+x.steps+'</p><p class="item-tip">'+x.m.t+'</p></div><div class="item-meta"><div class="meta-price">'+p+'</div><div class="meta-time">'+t1+'–'+t2+' min</div></div></div>';
     });
     
-    h+='</div><div class="note">Fares are estimates based on standard rates. Always confirm the final fare with the driver. Distance is calculated via open routing data.</div>';
-    
-    rs.innerHTML=h;
-    rs.style.display="block";
-    $("go").style.display="none"; 
+    $("res").innerHTML=h;
+    ra.style.display="block";
 }
 
 $("go").onclick=render;
@@ -271,27 +364,26 @@ $("disc").onchange=$("peak").onchange=function(){if($("from").value&&$("to").val
 $("swap").onclick=function(){var a=$("from").value;$("from").value=$("to").value;$("to").value=a;if(a||$("from").value)after()};
 
 var map=L.map("map", {zoomControl: false}).setView([14.30,120.93],10);
-L.control.zoom({position: 'topright'}).addTo(map);
+L.control.zoom({position: 'bottomright'}).addTo(map);
 
 L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:""}).addTo(map);
 var CACHE={},LY=L.layerGroup().addTo(map);
 
 function st(s){ 
     var m = $("mst");
-    if(!s) { m.textContent = ""; return; }
     m.textContent=s; 
-    setTimeout(function(){ if(m.textContent==s) m.textContent=""; }, 4000); 
+    if(s) setTimeout(function(){ if(m.textContent==s) m.textContent=""; }, 5000); 
 }
 
 function near(la,lo){var b=null,bd=1e9;ALL.forEach(function(p){var d=Math.hypot(p[1]-la,(p[2]-lo)*.97);if(d<bd){bd=d;b=p}});return b}
 function opt(v,txt){["from","to"].forEach(function(id){var o=$(id).querySelector('option[value="'+v+'"]');o.disabled=false;o.textContent=txt})}
-function mk(c){return L.divIcon({className:"",html:'<div class="mk '+c+'"></div>',iconSize:[14,14],iconAnchor:[7,7]})}
+function mk(c){return L.divIcon({className:"",html:'<div class="mk '+c+'"></div>',iconSize:[24,34],iconAnchor:[12,34]})}
 function key(a,b){return a[1].toFixed(4)+","+a[2].toFixed(4)+"|"+b[1].toFixed(4)+","+b[2].toFixed(4)}
 
 ALL.forEach(function(p){
-    L.circleMarker([p[1],p[2]],{radius:4,color:"#111",weight:1,fillColor:"#fff",fillOpacity:1}).addTo(map).bindTooltip(p[0]).on("click",function(){
+    L.circleMarker([p[1],p[2]],{radius:4,color:"#fff",weight:1.5,fillColor:"#3d0c11",fillOpacity:1}).addTo(map).bindTooltip(p[0]).on("click",function(){
         $("to").value=p[0];
-        st("Drop-off: "+p[0]);
+        st("Set drop-off to "+p[0]);
         after();
     });
 });
@@ -299,9 +391,6 @@ ALL.forEach(function(p){
 function draw(rt){
     LY.clearLayers();var f=$("from").value,t=$("to").value,a=f&&pt(f),b=t&&pt(t),q=[];
     
-    var padTop = 220; 
-    var padBot = window.innerWidth <= 480 ? window.innerHeight * 0.45 : 300; 
-
     if(a){
         var om=L.marker([a[1],a[2]],{icon:mk(f=="ME"?"me2":""),draggable:f=="ME"}).addTo(LY);
         if(f=="ME")om.on("dragend",function(e){
@@ -314,11 +403,11 @@ function draw(rt){
         q.push([a[1],a[2]]);
     }
     if(b){L.marker([b[1],b[2]],{icon:mk("dest")}).addTo(LY);q.push([b[1],b[2]])}
-    if(rt)L.polyline(rt,{color:"#000",weight:4,opacity:.8}).addTo(LY);
-    else if(q.length==2)L.polyline(q,{color:"#000",weight:2,dashArray:"6 6"}).addTo(LY);
+    if(rt)L.polyline(rt,{color:"#4a90e2",weight:5,opacity:.8}).addTo(LY);
+    else if(q.length==2)L.polyline(q,{color:"#666",weight:2,dashArray:"4 4"}).addTo(LY);
     
-    if(rt)map.fitBounds(rt,{paddingTopLeft:[20, padTop], paddingBottomRight:[20, padBot]});
-    else if(q.length==2)map.fitBounds(q,{paddingTopLeft:[20, padTop], paddingBottomRight:[20, padBot]});
+    if(rt)map.fitBounds(rt,{padding:[40, 40]});
+    else if(q.length==2)map.fitBounds(q,{padding:[40, 40]});
     else if(q.length==1)map.setView(q[0],13);
 }
 
@@ -327,28 +416,27 @@ return fetch("https://router.project-osrm.org/route/v1/driving/"+a[2]+","+a[1]+"
 
 function after(){
     var f=$("from").value,t=$("to").value;
-    $("go").style.display = (f && t && !$("res").innerHTML) ? "block" : "none"; 
     
     draw();
     if(!f) return;
     if(!t||f==t)return;
     
     var a=pt(f),b=pt(t);
-    if (!a || !b) return; // Prevent crashes if GPS hasn't populated coordinates yet
+    if (!a || !b) return;
 
-    st("Calculating route...");
+    st("Mapping route...");
     route(a,b).then(function(c){
         draw(c.geo);
         st(""); 
-        if($("res").innerHTML || $("res").style.display === "block") render(); 
+        if($("results-area").style.display === "block") render(); 
     }).catch(function(){
         st("Network error, distance estimated.");
-        if($("res").innerHTML || $("res").style.display === "block") render();
+        if($("results-area").style.display === "block") render();
     })
 }
 
 map.on("click",function(e){var n=near(e.latlng.lat,e.latlng.lng);pinNear=n[0];PIN=["Pin near "+n[0],e.latlng.lat,e.latlng.lng];opt("PIN","📌 Pin near "+n[0]);$("to").value="PIN";st("Pinned near "+n[0]);after()});
-$("from").onchange=$("to").onchange=function(){ $("res").style.display="none"; $("go").style.display="block"; after(); };
+$("from").onchange=$("to").onchange=function(){ $("results-area").style.display="none"; after(); };
 
 var WID=null, TID=null;
 function fin(){
@@ -361,7 +449,7 @@ function locate(){
     if(!navigator.geolocation){st("Location unavailable.");return}
     st("Locating...");
     
-    $("from").value = "ME"; // Instantly force UI change so user sees action
+    $("from").value = "ME"; 
     if(!$("to").value) draw(); 
 
     if(WID!==null)navigator.geolocation.clearWatch(WID);
