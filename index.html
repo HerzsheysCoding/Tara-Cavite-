@@ -13,7 +13,7 @@
     --surface-mute: #f6f6f6;
     --line: #e2e2e2;
     --mut: #6b6b6b;
-    --brand: #05a552; /* Grab-inspired green for end pins/accents */
+    --brand: #05a552;
     --accent: #2f7bff;
     --warn: #e02424;
 }
@@ -34,7 +34,7 @@ body { margin: 0; font-family: 'Montserrat', system-ui, sans-serif; background: 
 /* Map Background */
 #map { position: fixed; inset: 0; z-index: 1; }
 .leaflet-container { font-family: inherit; }
-.leaflet-control-zoom { border: none !important; box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important; margin-right: 16px !important; }
+.leaflet-control-zoom { border: none !important; box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important; margin-right: 16px !important; margin-top: max(16px, env(safe-area-inset-top, 16px)) !important; }
 .leaflet-bar a { background: var(--surface) !important; color: var(--ink) !important; }
 
 /* Custom Map Markers */
@@ -42,13 +42,24 @@ body { margin: 0; font-family: 'Montserrat', system-ui, sans-serif; background: 
 .mk.dest { background: var(--brand); box-shadow: 0 0 0 2px var(--brand); }
 .mk.me2 { background: var(--accent); box-shadow: 0 0 0 2px var(--accent), 0 0 0 8px rgba(47,123,255,.25); }
 
-/* UI Overlay Layer */
-.ui { position: fixed; inset: 0; z-index: 10; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding-top: env(safe-area-inset-top, 0); }
-.ui-container { width: 100%; max-width: 440px; margin: 0 auto; height: 100%; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
-.ui-container > * { pointer-events: auto; }
+/* Top Search Card - Absolutely positioned so map is clickable */
+.top-card { 
+    position: absolute; 
+    top: max(16px, env(safe-area-inset-top, 16px)); 
+    left: 16px; 
+    right: 16px; 
+    max-width: 440px; 
+    margin: 0 auto; 
+    z-index: 10; 
+    background: var(--surface); 
+    border-radius: 20px; 
+    box-shadow: 0 6px 24px rgba(0,0,0,0.12); 
+    padding: 16px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 16px; 
+}
 
-/* Top Search Card (Uber Style) */
-.top-card { background: var(--surface); margin: 16px; border-radius: 20px; box-shadow: 0 6px 24px rgba(0,0,0,0.12); padding: 16px; display: flex; flex-direction: column; gap: 16px; position: relative; }
 .nav { display: flex; justify-content: space-between; align-items: center; }
 .brand { font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 6px; color: var(--ink); }
 .brand svg { color: var(--brand); }
@@ -57,7 +68,7 @@ body { margin: 0; font-family: 'Montserrat', system-ui, sans-serif; background: 
 .planner { display: flex; align-items: center; gap: 14px; background: var(--surface-mute); padding: 12px 16px; border-radius: 16px; }
 .timeline { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 12px; }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink); }
-.dot.end { border-radius: 0; background: var(--brand); } /* Square for destination */
+.dot.end { border-radius: 0; background: var(--brand); } 
 .line { width: 2px; height: 32px; background: var(--line); }
 
 .inputs { flex: 1; display: flex; flex-direction: column; }
@@ -72,8 +83,24 @@ body { margin: 0; font-family: 'Montserrat', system-ui, sans-serif; background: 
 #mst { background: var(--ink); color: #fff; padding: 8px 16px; border-radius: 99px; font-size: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: opacity 0.3s; }
 #mst:empty { opacity: 0; }
 
-/* Bottom Action Sheet */
-.bottom-sheet { background: var(--surface); max-height: 55vh; display: flex; flex-direction: column; padding: 24px 20px calc(20px + env(safe-area-inset-bottom, 0)); margin: 16px; border-radius: 24px; box-shadow: 0 -4px 30px rgba(0,0,0,0.15); }
+/* Bottom Action Sheet - Absolutely positioned */
+.bottom-sheet { 
+    position: absolute; 
+    bottom: max(16px, env(safe-area-inset-bottom, 16px)); 
+    left: 16px; 
+    right: 16px; 
+    max-width: 440px; 
+    margin: 0 auto; 
+    z-index: 10; 
+    background: var(--surface); 
+    max-height: 55vh; 
+    display: flex; 
+    flex-direction: column; 
+    padding: 24px 20px; 
+    border-radius: 24px; 
+    box-shadow: 0 -4px 30px rgba(0,0,0,0.15); 
+}
+
 .opts { display: flex; gap: 16px; font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 20px; justify-content: center; flex-wrap: wrap; }
 .opts label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
 .opts input { accent-color: var(--brand); width: 18px; height: 18px; cursor: pointer; }
@@ -83,6 +110,9 @@ body { margin: 0; font-family: 'Montserrat', system-ui, sans-serif; background: 
 
 #err { color: var(--warn); background: rgba(224,36,36,0.1); padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; display: none; font-size: 13px; font-weight: 600; }
 #res { overflow-y: auto; padding-top: 4px; display: none; margin-bottom: 16px; }
+
+#res::-webkit-scrollbar { width: 6px; }
+#res::-webkit-scrollbar-thumb { background: var(--line); border-radius: 99px; }
 
 /* Results Styling */
 .sum { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
@@ -115,8 +145,9 @@ li { margin-bottom: 6px; }
 
 /* Mobile full-bleed flush sheet */
 @media (max-width: 480px) {
-    .bottom-sheet { margin: 0; border-radius: 24px 24px 0 0; max-height: 60vh; }
-    .leaflet-control-zoom { display: none; } /* Hide map controls on pure mobile */
+    .bottom-sheet { margin: 0; border-radius: 24px 24px 0 0; max-height: 60vh; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0)); bottom: 0; left: 0; right: 0; }
+    .top-card { left: 12px; right: 12px; }
+    .leaflet-control-zoom { display: none; }
 }
 </style>
 </head>
@@ -124,53 +155,45 @@ li { margin-bottom: 6px; }
 
 <div id="map"></div>
 
-<div class="ui">
-    <div class="ui-container">
-        
-        <!-- TOP: Floating Search Card -->
-        <header class="top-card">
-            <div class="nav">
-                <div class="brand">
-                    <svg width="24" height="20" viewBox="0 0 30 26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"><path d="M2 4l6 18 7-12 7 12 6-18"/></svg>
-                    BiyaheCavite
-                </div>
-                <button class="locb" id="locb">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
-                    Locate
-                </button>
-            </div>
-            
-            <div class="planner">
-                <div class="timeline">
-                    <div class="dot"></div>
-                    <div class="line"></div>
-                    <div class="dot end"></div>
-                </div>
-                <div class="inputs">
-                    <select id="from"></select>
-                    <hr>
-                    <select id="to"></select>
-                </div>
-                <button class="swap" id="swap" aria-label="Swap">⇅</button>
-            </div>
-            
-            <div class="mapbar"><span id="mst"></span></div>
-        </header>
-
-        <!-- BOTTOM: Action & Results Sheet -->
-        <div class="bottom-sheet">
-            <div id="err"></div>
-            
-            <div id="res"></div>
-            
-            <div class="opts">
-                <label><input type="checkbox" id="disc"> Student/Senior (20% off)</label>
-                <label><input type="checkbox" id="peak"> Rush hour</label>
-            </div>
-            <button class="go" id="go">Find my commute</button>
+<header class="top-card">
+    <div class="nav">
+        <div class="brand">
+            <svg width="24" height="20" viewBox="0 0 30 26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"><path d="M2 4l6 18 7-12 7 12 6-18"/></svg>
+            BiyaheCavite
         </div>
-        
+        <button class="locb" id="locb">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+            Locate
+        </button>
     </div>
+    
+    <div class="planner">
+        <div class="timeline">
+            <div class="dot"></div>
+            <div class="line"></div>
+            <div class="dot end"></div>
+        </div>
+        <div class="inputs">
+            <select id="from"></select>
+            <hr>
+            <select id="to"></select>
+        </div>
+        <button class="swap" id="swap" aria-label="Swap">⇅</button>
+    </div>
+    
+    <div class="mapbar"><span id="mst"></span></div>
+</header>
+
+<div class="bottom-sheet">
+    <div id="err"></div>
+    
+    <div id="res"></div>
+    
+    <div class="opts">
+        <label><input type="checkbox" id="disc"> Student/Senior (20% off)</label>
+        <label><input type="checkbox" id="peak"> Rush hour</label>
+    </div>
+    <button class="go" id="go">Find my commute</button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -240,14 +263,13 @@ function render(){
     
     rs.innerHTML=h;
     rs.style.display="block";
-    $("go").style.display="none"; // Hide button after search to save space
+    $("go").style.display="none"; 
 }
 
 $("go").onclick=render;
 $("disc").onchange=$("peak").onchange=function(){if($("from").value&&$("to").value&&$("res").innerHTML)render()};
 $("swap").onclick=function(){var a=$("from").value;$("from").value=$("to").value;$("to").value=a;if(a||$("from").value)after()};
 
-// Remove map zoom controls to match the clean app UI
 var map=L.map("map", {zoomControl: false}).setView([14.30,120.93],10);
 L.control.zoom({position: 'topright'}).addTo(map);
 
@@ -258,7 +280,7 @@ function st(s){
     var m = $("mst");
     if(!s) { m.textContent = ""; return; }
     m.textContent=s; 
-    setTimeout(function(){ if(m.textContent==s) m.textContent=""; }, 4000); // Auto-hide toast
+    setTimeout(function(){ if(m.textContent==s) m.textContent=""; }, 4000); 
 }
 
 function near(la,lo){var b=null,bd=1e9;ALL.forEach(function(p){var d=Math.hypot(p[1]-la,(p[2]-lo)*.97);if(d<bd){bd=d;b=p}});return b}
@@ -277,7 +299,6 @@ ALL.forEach(function(p){
 function draw(rt){
     LY.clearLayers();var f=$("from").value,t=$("to").value,a=f&&pt(f),b=t&&pt(t),q=[];
     
-    // Dynamic Padding to avoid UI overlaps (Top Card & Bottom Sheet)
     var padTop = 220; 
     var padBot = window.innerWidth <= 480 ? window.innerHeight * 0.45 : 300; 
 
@@ -306,18 +327,20 @@ return fetch("https://router.project-osrm.org/route/v1/driving/"+a[2]+","+a[1]+"
 
 function after(){
     var f=$("from").value,t=$("to").value;
-    $("go").style.display = (f && t && !$("res").innerHTML) ? "block" : "none"; // Manage Go button visibility
+    $("go").style.display = (f && t && !$("res").innerHTML) ? "block" : "none"; 
     
     draw();
     if(!f) return;
     if(!t||f==t)return;
     
     var a=pt(f),b=pt(t);
+    if (!a || !b) return; // Prevent crashes if GPS hasn't populated coordinates yet
+
     st("Calculating route...");
     route(a,b).then(function(c){
         draw(c.geo);
-        st(""); // clear toast
-        if($("res").innerHTML || $("res").style.display === "block") render(); // Auto-update if results are open
+        st(""); 
+        if($("res").innerHTML || $("res").style.display === "block") render(); 
     }).catch(function(){
         st("Network error, distance estimated.");
         if($("res").innerHTML || $("res").style.display === "block") render();
@@ -330,12 +353,17 @@ $("from").onchange=$("to").onchange=function(){ $("res").style.display="none"; $
 var WID=null, TID=null;
 function fin(){
     if(TID!==null){clearTimeout(TID);TID=null;}
-    if(WID!==null){navigator.geolocation.clearWatch(WID);WID=null;after();}
+    if(WID!==null){navigator.geolocation.clearWatch(WID);WID=null;}
+    after();
 }
 
 function locate(){
     if(!navigator.geolocation){st("Location unavailable.");return}
     st("Locating...");
+    
+    $("from").value = "ME"; // Instantly force UI change so user sees action
+    if(!$("to").value) draw(); 
+
     if(WID!==null)navigator.geolocation.clearWatch(WID);
     if(TID!==null)clearTimeout(TID);
     
@@ -346,20 +374,20 @@ function locate(){
         ME=["My location",best.latitude,best.longitude,best.accuracy];
         opt("ME","📍 My location");
         
-        var f=$("from").value;
-        if(!f || f==="ME"){
-            $("from").value="ME";
-            if(!$("to").value) draw();
+        if(R(best.accuracy)<=40) { 
+            fin(); 
+            st(""); 
+        } else {
+            draw();
         }
-        
-        if(R(best.accuracy)<=40) { fin(); st(""); }
     },function(){
         st("Location access denied.");
+        $("from").value = "";
         if(WID!==null){navigator.geolocation.clearWatch(WID);WID=null;}
         if(TID!==null){clearTimeout(TID);TID=null;}
     },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
     
-    TID=setTimeout(fin,15000);
+    TID=setTimeout(function(){ st(""); fin(); }, 15000);
 }
 
 $("locb").onclick=locate;
